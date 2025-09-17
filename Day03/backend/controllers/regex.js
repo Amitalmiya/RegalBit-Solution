@@ -28,3 +28,4 @@ app.post("/api/resigter", (req, res) => {
     }
     res.status(200).json({message: "User registered Succesfully"})
 })
+
