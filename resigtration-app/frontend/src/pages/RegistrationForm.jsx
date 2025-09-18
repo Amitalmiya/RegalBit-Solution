@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import axios from 'axios'
+import axios from "axios";
 import { RegexPatterns } from "../utils/RegexPatterns";
 
-const initialForm = {
+const initialForm = 
+  {
   phone: "",
   zipCode: "",
   email: "",
   password: "",
-  SocialSecurityNo: "",
+  socialSecurityNo: "",
   dateOfBirth: "",
   userName: "",
   websiteUrl: "",
@@ -17,85 +18,128 @@ const initialForm = {
   hexaDecimalColorCode: "",
 };
 
+const fields = [
+  { name: "phone", label: "Phone Number :", type: "tel", placeholder: "+1-555-123-4567 or (555) 123-4567"},
+  { name: "zipCode", label: "Zip Code :", type: "text", placeholder: "12345 or 12345-6789", maxLength: 10 },
+  { name: "email", label: "Email :", type: "email", placeholder: "example@gmail.com"},
+  { name: "password", label: "Password :", type: "password", placeholder: "Enter a strong password", minLength: 8 },
+  { name: "socialSecurityNo", label: "Social Security Number :", type: "tel", placeholder: "123-45-6789", maxLength: 11 },
+  { name: "dateOfBirth", label: "Date of Birth :", type: "text", placeholder: "MM-DD-YYYY or MM/DD/YYYY", maxLength: 10 },
+  { name: "userName", label: "Username :", type: "text", placeholder: "Enter your name", maxLength: 20 },
+  { name: "websiteUrl", label: "Website Url :", type: "text", placeholder: "https://example.com"},
+  { name: "creditCardNo", label: "Credit Card Number :", type: "text", placeholder: "xxxx-xxxx-xxxx-xxxx", maxLength: 19 },
+  { name: "driverLicense", label: "Driver License :", type: "text", placeholder: "X12X456", maxLength: 12 },
+  { name: "timeFormat", label: "Time :", type: "text", placeholder: "HH:MM AM/PM", maxLength: 7 },
+  { name: "hexaDecimalColorCode", label: "Hexadecimal Color Code :", type: "text", placeholder: "#FFF, #FFFFFF, #F5A52S"},
+];
+
 const RegistrationForm = () => {
+  const [form, setForm] = useState(initialForm);
 
-  const [form, setForm] = useState()
+  const [errors, setErrors] = useState({})
 
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post("http://localhost:5000/users", initialForm);
-    
-    if (res.status === 200 || res.status === 201) {
-      alert("Data submitted successfully");
-      setForm(initialForm); 
-    } else {
-      alert("Something went wrong");
+
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!RegexPatterns.phone.test(form.phone)) {
+      newErrors.phone = "Invalid Phone Number";
     }
-  } catch (error) {
-    alert(error.response?.data?.message || "Server Error");
+    if(!RegexPatterns.zipCode.test(form.zipCode)){
+      newErrors.zipCode = "Invalid Zip Code"
+    }
+    if(!RegexPatterns.email.test(form.email)){
+      newErrors.email = "Invalid Email"
+    }
+    if(!RegexPatterns.password.test(form.password)) {
+      newErrors.password = "Invalid Password"
+    }
+    if(!RegexPatterns.socialSecurityNo.test(form.socialSecurityNo)){
+      newErrors.socialSecurityNo = "Invalid Social Security No"
+    }
+    if(!RegexPatterns.dateOfBirth.test(form.dateOfBirth)){
+      newErrors.dateOfBirth = "Invalid Date of Bith"
+    }
+    if(!RegexPatterns.userName.test(form.userName)){
+      newErrors.userName = "Invalid Username"
+    }
+    if(!RegexPatterns.websiteUrl.test(form.websiteUrl)){
+      newErrors.websiteUrl = "Invalid WebsiteURL"
+    }
+    if(!RegexPatterns.creditCardNo.test(form.creditCardNo)){
+      newErrors.creditCardNo = "Invalid Credit Card Number"
+    }
+    if(!RegexPatterns.driverLicense.test(form.driverLicense)){
+      newErrors.driverLicense = "Invalid Driver License"
+    }
+    if(!RegexPatterns.timeFormat.test(form.timeFormat)){
+      newErrors.timeFormat = "Invalid Time Format"
+    }
+    if(!RegexPatterns.hexaDecimalColorCode.test(form.hexaDecimalColorCode)){
+      newErrors.hexaDecimalColorCode = "Invalid Hexadecimal Color Code"
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   }
-};
 
+  const handleChange = (e) => {
+    const {name, value} = e.target;
+    setForm((prev)=>({...prev, [name]: value}))
+  }
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    try {
+      const res = await axios.post("http://localhost:5000/users", form);
+
+      if (res.status === 200 || res.status === 201) {
+        alert("Data submitted successfully");
+        setForm(initialForm);
+      } else {
+        alert("Something went wrong");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Server Error");
+      console.log(error);
+    }
+  };
 
   return (
     <div className="flex item-center justify-center  w-full bg-gray-100 min-h-screen py-8">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
-        <h2 className="text-2xl text-center font-bold underline">Registration Form</h2>
+        <h2 className="text-2xl text-center font-bold underline">
+          Registration Form
+        </h2>
         <form action="" className="py-10" onSubmit={handleFormSubmit}>
-          <div className="mb-4">
-            <lable>Phone Number</lable>
-            <input type="tel" placeholder="+1-555-123-4567 or (555) 123-4567" className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"/>
+          {fields.map(({ name, label, type, placeholder, maxLength, minLength,...rest}) => (
+          <div className="mb-4" key={name}>
+            <label className="italic">{label}</label>
+            <input
+              type={type}
+              name={name}
+              placeholder={placeholder}
+              className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+              value={form[name]}
+              onChange={handleChange}
+              required
+              {...rest}
+            />
+            {errors[name] && (
+              <p className="text-red-500 text-sm mt-1">{errors[name]}</p>
+            )}
           </div>
-          <div className="mb-4">
-            <lable>Zip Code</lable>
-            <input type="text" placeholder="12345 or 12345-6789" maxLength={10} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Email</lable>
-            <input type="email" placeholder="example@gmail.com" className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Password</lable>
-            <input type="password" placeholder="Enter a strong password" minLength={8} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Social Security Number</lable>
-            <input type="tel" placeholder="123-45-6789" maxLength={11} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Date of Birth</lable>
-            <input type="text" placeholder="MM-DD-YYYY or MM/DD/YYYY" max={10} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>User Name</lable>
-            <input type="text" placeholder="Enter your username" maxLength={20} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Website Url</lable>
-            <input type="text" placeholder="https://example.com" className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Credit card Number</lable>
-            <input type="text" placeholder="xxxx-xxxx-xxxx-xxxx" maxLength={19} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Driver License</lable>
-            <input type="text" placeholder="X1234567" maxLength={12} className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Time</lable>
-            <input type="text" placeholder="HH:MM AM/PM" className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-          <div className="mb-4">
-            <lable>Hexadecimal Color Code</lable>
-            <input type="text" placeholder="#FFF,#FFFFFF, #F2AE2B" className="border w-full focus:ring-1 focus:ring-black italic text-center"/>
-          </div>
-            <button type="submit" className="border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer">Register</button>
+          ))}
+          <button
+            type="submit"
+            className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
+          >
+            Register
+          </button>
         </form>
       </div>
     </div>
-  )
+  );
 };
 
 export default RegistrationForm;
