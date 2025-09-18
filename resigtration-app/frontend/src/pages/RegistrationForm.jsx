@@ -90,7 +90,18 @@ const RegistrationForm = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+
     try {
+      
+      const existingUsers = await axios.get("http://localhost:5000/users")
+
+      const userExists = existingUsers.data.some((u) => u.userName === form.userName );
+      
+      if (userExists){
+        alert("User already exists");
+        return;
+      }
+      
       const res = await axios.post("http://localhost:5000/users", form);
 
       if (res.status === 200 || res.status === 201) {
@@ -126,7 +137,7 @@ const RegistrationForm = () => {
               {...rest}
             />
             {errors[name] && (
-              <p className="text-red-500 text-sm mt-1">{errors[name]}</p>
+              <p className="text-red-500 text-sm mt-1 italic">{errors[name]}</p>
             )}
           </div>
           ))}
