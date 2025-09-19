@@ -95,12 +95,19 @@ const RegistrationForm = () => {
       
       const existingUsers = await axios.get("http://localhost:5000/users")
 
-      const userExists = existingUsers.data.some((u) => u.userName === form.userName );
-      
+      const userExists = existingUsers.data.some((u) => u.userName === form.userName);
+
       if (userExists){
-        alert("User already exists");
+        alert("Username already exists");
         return;
       }
+      
+      const userEmailExist = existingUsers.data.some((u)=> u.email === form.email)
+
+      if (userEmailExist){
+        alert("User email already exists");
+      }
+      
       
       const res = await axios.post("http://localhost:5000/users", form);
 
