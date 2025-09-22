@@ -5,6 +5,8 @@ import RegistrationForm from './pages/RegistrationForm';
 import AllUser from './pages/AllUser';
 import EditUser from './pages/EditUser';
 import ViewUsers from './pages/ViewUsers';
+import PhoneRegistration from './pages/PhoneRegistration';
+import EmailRegistration from './pages/EmailRegistration';
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
       </div>
         <Routes>
           <Route path="/" element={<RegistrationForm />} />
+          <Route path='/phone' element={<PhoneRegistration />} />
+          <Route path='/email' element={<EmailRegistration />}/>
           <Route path='/users' element={<AllUser />} />
           <Route path='/edit/:id' element={<EditUser />}/>
           <Route path='/view/:id' element={<ViewUsers />}/>

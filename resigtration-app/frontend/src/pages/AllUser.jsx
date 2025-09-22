@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 
 const AllUser = () => {
-  const [data, setData] = useState([{}]);
+  const [data, setData] = useState([]);
 
   const [dropdown, setDropDown] = useState(false);
 
@@ -52,23 +52,28 @@ const AllUser = () => {
               <th className="py-2 px-4 border-b">Email</th>
               <th className="py-2 px-4 border-b">Social Security No</th>
               <th className="py-2 px-4 border-b">Driver License</th>
+              <th className="py-2 px-4 border-b">Gender</th>
+              <th className="py-2 px-4 border-b">Blood Group</th>
               <th className="py-2 px-4 border-b">Action</th>
             </tr>
           </thead>
           <tbody>
             {data.map((user) => (
-              <tr key={user.id} className="italic px-12">
-                <td className="py-2 px-4 border-b">{user.id}</td>
-                <td className="py-2 px-4 border-b">{user.userName}</td>
-                <td className="py-2 px-4 border-b">{user.dateOfBirth}</td>
-                <td className="py-2 px-4 border-b">{user.phone}</td>
-                <td className="py-2 px-4 border-b">{user.email}</td>
-                <td className="py-2 px-4 border-b">{user.socialSecurityNo}</td>
-                <td className="py-2 px-4 border-b">{user.driverLicense}</td>
-                <td className="py-2 px-4 border-b relative">
+              <tr key={user.id} className="italic">
+                <td className="py-2 px-8 border-b">{user.id}</td>
+                <td className="py-2 px-5 border-b">{user.userName}</td>
+                <td className="py-2 px-5 border-b">{user.dateOfBirth}</td>
+                <td className="py-2 px-5 border-b">{user.phone}</td>
+                <td className="py-2 px-6 border-b">{user.email}</td>
+                <td className="py-2 px-7 border-b">{user.socialSecurityNo}</td>
+                <td className="py-2 px-5 border-b">{user.driverLicense}</td>
+                <td className="py-2 px-6 border-b">{user.gender}</td>
+                <td className="py-2 px-8 border-b">{user.bloodGroup}</td>
+                <td className="py-2 px-10 border-b relative">
                     <button className="p-2 rounded hover:bg-gray-200 cursor-pointer" onClick={()=> setDropDown(!dropdown === user.id ? null : user.id)}><CiMenuKebab /></button>
                     {dropdown === user.id && (
                     <div className="absolute right-0 mt-2 w-40 bg-gray-100 border rounderd-lg shadow-lg">
+                        <select><option></option></select>
                         <button className="block w-full text-left px-2 py-1 bg-blue-50 hover:bg-gray-400 text-blue-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/view/${user.id}`)}} >View User</button>
                         <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-green-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/edit/${user.id}`)}} >Edit User</button>
                         <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-red-600 cursor-pointer" onClick={()=> {setDropDown(false); handleDelete(user.id)}} >Delete User</button>

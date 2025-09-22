@@ -13,7 +13,9 @@
       "creditCardNo": "4857-8574-9586-4444",
       "driverLicense": "A451AS45",
       "timeFormat": "10:30 AM",
-      "hexaDecimalColorCode": "#FFA152"
+      "hexaDecimalColorCode": "#FFA152",
+      "gender": "Male",
+      "bloodGroup": "O+"
     },
     {
       "id": "b0c2",
@@ -28,7 +30,9 @@
       "creditCardNo": "4857-8574-9586-4444",
       "driverLicense": "A451AS45",
       "timeFormat": "10:32 AM",
-      "hexaDecimalColorCode": "#FFA152"
+      "hexaDecimalColorCode": "#FFA152",
+      "gender": "Male",
+      "bloodGroup": "AB+"
     },
     {
       "id": "b883",
@@ -43,22 +47,9 @@
       "creditCardNo": "4857-8574-9586-4444",
       "driverLicense": "A451AS45",
       "timeFormat": "03:00 PM",
-      "hexaDecimalColorCode": "#FFA152"
-    },
-    {
-      "id": "82d1",
-      "phone": "(555) 123-4567",
-      "zipCode": "25214",
-      "email": "demouser12@gmail.com",
-      "password": "Test@123",
-      "socialSecurityNo": "123-45-6789",
-      "dateOfBirth": "02/21/1999",
-      "userName": "demousers",
-      "websiteUrl": "https://github.com",
-      "creditCardNo": "4857-8574-9586-4444",
-      "driverLicense": "A451AS45",
-      "timeFormat": "03:00 PM",
-      "hexaDecimalColorCode": "#FFA152"
+      "hexaDecimalColorCode": "#FFA152",
+      "gender": "Male",
+      "bloodGroup": "B+"
     },
     {
       "id": "9a69",
@@ -73,7 +64,9 @@
       "creditCardNo": "4857-8574-9586-4444",
       "driverLicense": "A451AS45",
       "timeFormat": "10:31 AM",
-      "hexaDecimalColorCode": "#FFA152"
+      "hexaDecimalColorCode": "#FFA152",
+      "gender": "Female",
+      "bloodGroup": "O+"
     },
     {
       "id": "49bc",
@@ -88,7 +81,26 @@
       "creditCardNo": "4857-8574-9586-4444",
       "driverLicense": "A451AS45",
       "timeFormat": "10:30 AM",
-      "hexaDecimalColorCode": "#FFA152"
+      "hexaDecimalColorCode": "#FFA152",
+      "gender": "Other",
+      "bloodGroup": "B-"
+    },
+    {
+      "id": "9431",
+      "phone": "(555) 123-4567",
+      "zipCode": "12542",
+      "email": "amitalm777@gmail.com",
+      "password": "Amit@2003",
+      "socialSecurityNo": "123-45-6789",
+      "dateOfBirth": "04/21/2003",
+      "userName": "demousers",
+      "websiteUrl": "https://instagram.com",
+      "creditCardNo": "4857-8574-9586-4444",
+      "driverLicense": "A451AS45",
+      "timeFormat": "10:00 AM",
+      "hexaDecimalColorCode": "#FFA152",
+      "gender": "Male",
+      "bloodGroup": "O+"
     }
   ]
 }

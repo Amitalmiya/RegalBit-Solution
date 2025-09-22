@@ -15,13 +15,15 @@ const fields = [
   { name: "driverLicense", label: "Driver License :" },
   { name: "timeFormat", label: "Time :" },
   { name: "hexaDecimalColorCode", label: "Hexadecimal Color Code :" },
+  { name: "gender", label: "Gender :"},
+  { name: "bloodGroup", label: "Blood Group :"}
 ];
 
 const ViewUser = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({});
 
   useEffect(() => {
     axios
@@ -48,7 +50,7 @@ const ViewUser = () => {
           User Details
         </h2>
         <div className="space-y-4">
-          {fields.map(({ name, label }) => (
+          {fields.map(({ name, label}) => (
             <div key={name} className="mb-2">
               <p className="italic font-semibold">{label}</p>
               <p className="border rounded px-2 py-1 bg-gray-50 italic text-center">
@@ -58,10 +60,16 @@ const ViewUser = () => {
           ))}
         </div>
         <button
-          className="italic border rounded-[5px] w-full mt-6 bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
+          className="italic border rounded-[5px] w-1/3 mt-6 ml-13 bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
           onClick={() => navigate("/users")}
         >
           Back to Users
+        </button>
+        <button
+          className="italic border rounded-[5px] w-1/3 mt-6 ml-5 bg-green-500 py-2 cursor-pointer hover:bg-green-300"
+          onClick={() => navigate(`/edit/${user.id}`)}
+        >
+          Edit Users
         </button>
       </div>
     </div>

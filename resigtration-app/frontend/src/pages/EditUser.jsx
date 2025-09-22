@@ -15,6 +15,8 @@ const initialForm = {
   driverLicense: "",
   timeFormat: "",
   hexaDecimalColorCode: "",
+  gender: "",
+  bloodGroup: "",
 };
 
 const fields = [
@@ -98,6 +100,18 @@ const fields = [
     type: "text",
     placeholder: "#FFF, #FFFFFF, #F5A52S",
   },
+  {
+    name: "gender",
+    label: "Gender :",
+    type : "select",
+    option: ["Male", "Female", "Other"]
+  },
+   {
+    name: "bloodGroup",
+    label: "Blood Group :",
+    type: "select",
+    option: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
+  },
 ];
 
 const EditUser = () => {
@@ -113,7 +127,7 @@ const EditUser = () => {
     axios
       .get(`http://localhost:5000/users/${id}`)
       .then((res) => setEdit(res.data))
-      .catch((err) => alert(`Error fetching user:`, err));
+      .catch((err) => alert(`Error fetching user: ${err.message}`))
   }, [id]);
 
   const handleFormEdit = async (e) => {
@@ -159,10 +173,28 @@ const EditUser = () => {
               placeholder,
               maxLength,
               minLength,
+              option = [],
               ...rest
             }) => (
               <div className="mb-4" key={name}>
                 <label className="italic">{label}</label>
+              {type === 'select' ? (
+                <select name={name} 
+                  value={edit[name]}
+                  onChange={(e) => {
+                    setEdit({...edit, [name]: e.target.value});
+                  }}
+                  className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                  required
+                >
+                  <option>Select {label.replace(":", "")}</option>
+                   {option.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                </select>
+              ) : (
                 <input
                   type={type}
                   name={name}
@@ -175,6 +207,7 @@ const EditUser = () => {
                   required
                   {...rest}
                 />
+              )}
                 {errors[name] && (
                   <p className="text-red-500 text-sm mt-1 italic">
                     {errors[name]}

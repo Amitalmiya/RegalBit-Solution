@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { RegexPatterns } from "../utils/RegexPatterns";
+import { Link } from "react-router-dom";
 
-const initialForm = 
-  {
+const initialForm = {
   phone: "",
   zipCode: "",
   email: "",
@@ -16,99 +16,188 @@ const initialForm =
   driverLicense: "",
   timeFormat: "",
   hexaDecimalColorCode: "",
+  gender: "",
+  bloodGroup: "",
 };
 
 const fields = [
-  { name: "phone", label: "Phone Number :", type: "tel", placeholder: "+1-555-123-4567 or (555) 123-4567"},
-  { name: "zipCode", label: "Zip Code :", type: "text", placeholder: "12345 or 12345-6789", maxLength: 10 },
-  { name: "email", label: "Email :", type: "email", placeholder: "example@gmail.com"},
-  { name: "password", label: "Password :", type: "password", placeholder: "Enter a strong password", minLength: 8 },
-  { name: "socialSecurityNo", label: "Social Security Number :", type: "tel", placeholder: "123-45-6789", maxLength: 11 },
-  { name: "dateOfBirth", label: "Date of Birth :", type: "text", placeholder: "MM-DD-YYYY or MM/DD/YYYY", maxLength: 10 },
-  { name: "userName", label: "Username :", type: "text", placeholder: "Enter your name", maxLength: 20 },
-  { name: "websiteUrl", label: "Website Url :", type: "text", placeholder: "https://example.com"},
-  { name: "creditCardNo", label: "Credit Card Number :", type: "text", placeholder: "xxxx-xxxx-xxxx-xxxx", maxLength: 19 },
-  { name: "driverLicense", label: "Driver License :", type: "text", placeholder: "X12X456", maxLength: 12 },
-  { name: "timeFormat", label: "Time :", type: "text", placeholder: "HH:MM AM/PM", maxLength: 7 },
-  { name: "hexaDecimalColorCode", label: "Hexadecimal Color Code :", type: "text", placeholder: "#FFF, #FFFFFF, #F5A52S"},
+  {
+    name: "phone",
+    label: "Phone Number :",
+    type: "tel",
+    placeholder: "+1-555-123-4567 or (555) 123-4567",
+  },
+  {
+    name: "zipCode",
+    label: "Zip Code :",
+    type: "text",
+    placeholder: "12345 or 12345-6789",
+    maxLength: 10,
+  },
+  {
+    name: "email",
+    label: "Email :",
+    type: "email",
+    placeholder: "example@gmail.com",
+  },
+  {
+    name: "password",
+    label: "Password :",
+    type: "password",
+    placeholder: "Enter a strong password",
+    minLength: 8,
+  },
+  {
+    name: "socialSecurityNo",
+    label: "Social Security Number :",
+    type: "tel",
+    placeholder: "123-45-6789",
+    maxLength: 11,
+  },
+  {
+    name: "dateOfBirth",
+    label: "Date of Birth :",
+    type: "text",
+    placeholder: "MM-DD-YYYY or MM/DD/YYYY",
+    maxLength: 10,
+  },
+  {
+    name: "userName",
+    label: "Username :",
+    type: "text",
+    placeholder: "Enter your name",
+    maxLength: 20,
+  },
+  {
+    name: "websiteUrl",
+    label: "Website Url :",
+    type: "text",
+    placeholder: "https://example.com",
+  },
+  {
+    name: "creditCardNo",
+    label: "Credit Card Number :",
+    type: "text",
+    placeholder: "xxxx-xxxx-xxxx-xxxx",
+    maxLength: 19,
+  },
+  {
+    name: "driverLicense",
+    label: "Driver License :",
+    type: "text",
+    placeholder: "X12X456",
+    maxLength: 12,
+  },
+  {
+    name: "timeFormat",
+    label: "Time :",
+    type: "text",
+    placeholder: "HH:MM AM/PM",
+    maxLength: 7,
+  },
+  {
+    name: "hexaDecimalColorCode",
+    label: "Hexadecimal Color Code :",
+    type: "text",
+    placeholder: "#FFF, #FFFFFF, #F5A52S",
+  },
+  {
+    name: "gender",
+    label: "Gender :",
+    type: "select",
+    option: ["Male", "Female", "Other"],
+  },
+  {
+    name: "bloodGroup",
+    label: "Blood Group :",
+    type: "select",
+    option: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
+  },
 ];
 
 const RegistrationForm = () => {
   const [form, setForm] = useState(initialForm);
 
-  const [errors, setErrors] = useState({})
-
-
+  const [errors, setErrors] = useState({});
 
   const validateForm = () => {
     const newErrors = {};
     if (!RegexPatterns.phone.test(form.phone)) {
       newErrors.phone = "Invalid Phone Number";
     }
-    if(!RegexPatterns.zipCode.test(form.zipCode)){
-      newErrors.zipCode = "Invalid Zip Code"
+    if (!RegexPatterns.zipCode.test(form.zipCode)) {
+      newErrors.zipCode = "Invalid Zip Code";
     }
-    if(!RegexPatterns.email.test(form.email)){
-      newErrors.email = "Invalid Email"
+    if (!RegexPatterns.email.test(form.email)) {
+      newErrors.email = "Invalid Email";
     }
-    if(!RegexPatterns.password.test(form.password)) {
-      newErrors.password = "Invalid Password"
+    if (!RegexPatterns.password.test(form.password)) {
+      newErrors.password = "Invalid Password";
     }
-    if(!RegexPatterns.socialSecurityNo.test(form.socialSecurityNo)){
-      newErrors.socialSecurityNo = "Invalid Social Security No"
+    if (!RegexPatterns.socialSecurityNo.test(form.socialSecurityNo)) {
+      newErrors.socialSecurityNo = "Invalid Social Security No";
     }
-    if(!RegexPatterns.dateOfBirth.test(form.dateOfBirth)){
-      newErrors.dateOfBirth = "Invalid Date of Bith"
+    if (!RegexPatterns.dateOfBirth.test(form.dateOfBirth)) {
+      newErrors.dateOfBirth = "Invalid Date of Bith";
     }
-    if(!RegexPatterns.userName.test(form.userName)){
-      newErrors.userName = "Invalid Username"
+    if (!RegexPatterns.userName.test(form.userName)) {
+      newErrors.userName = "Invalid Username";
     }
-    if(!RegexPatterns.websiteUrl.test(form.websiteUrl)){
-      newErrors.websiteUrl = "Invalid WebsiteURL"
+    if (!RegexPatterns.websiteUrl.test(form.websiteUrl)) {
+      newErrors.websiteUrl = "Invalid WebsiteURL";
     }
-    if(!RegexPatterns.creditCardNo.test(form.creditCardNo)){
-      newErrors.creditCardNo = "Invalid Credit Card Number"
+    if (!RegexPatterns.creditCardNo.test(form.creditCardNo)) {
+      newErrors.creditCardNo = "Invalid Credit Card Number";
     }
-    if(!RegexPatterns.driverLicense.test(form.driverLicense)){
-      newErrors.driverLicense = "Invalid Driver License"
+    if (!RegexPatterns.driverLicense.test(form.driverLicense)) {
+      newErrors.driverLicense = "Invalid Driver License";
     }
-    if(!RegexPatterns.timeFormat.test(form.timeFormat)){
-      newErrors.timeFormat = "Invalid Time Format"
+    if (!RegexPatterns.timeFormat.test(form.timeFormat)) {
+      newErrors.timeFormat = "Invalid Time Format";
     }
-    if(!RegexPatterns.hexaDecimalColorCode.test(form.hexaDecimalColorCode)){
-      newErrors.hexaDecimalColorCode = "Invalid Hexadecimal Color Code"
+    if (!RegexPatterns.hexaDecimalColorCode.test(form.hexaDecimalColorCode)) {
+      newErrors.hexaDecimalColorCode = "Invalid Hexadecimal Color Code";
     }
+    if (!form.gender) {
+      newErrors.gender = "Gender is required";
+    }
+    if (!form.bloodGroup) {
+      newErrors.bloodGroup = "Blood Group is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }
+  };
 
   const handleChange = (e) => {
-    const {name, value} = e.target;
-    setForm((prev)=>({...prev, [name]: value}))
-  }
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     try {
-      
-      const existingUsers = await axios.get("http://localhost:5000/users")
+      const existingUsers = await axios.get("http://localhost:5000/users");
 
-      const userExists = existingUsers.data.some((u) => u.userName === form.userName);
+      const userExists = existingUsers.data.some(
+        (u) => u.userName === form.userName
+      );
 
-      if (userExists){
+      if (userExists) {
         alert("Username already exists");
         return;
       }
-      
-      const userEmailExist = existingUsers.data.some((u)=> u.email === form.email)
 
-      if (userEmailExist){
+      const userEmailExist = existingUsers.data.some(
+        (u) => u.email === form.email
+      );
+
+      if (userEmailExist) {
         alert("User email already exists");
       }
-      
-      
+
       const res = await axios.post("http://localhost:5000/users", form);
 
       if (res.status === 200 || res.status === 201) {
@@ -130,30 +219,75 @@ const RegistrationForm = () => {
           Registration Form
         </h2>
         <form action="" className="py-10" onSubmit={handleFormSubmit}>
-          {fields.map(({ name, label, type, placeholder, maxLength, minLength,...rest}) => (
-          <div className="mb-4" key={name}>
-            <label className="italic">{label}</label>
-            <input
-              type={type}
-              name={name}
-              placeholder={placeholder}
-              className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-              value={form[name]}
-              onChange={handleChange}
-              required
-              {...rest}
-            />
-            {errors[name] && (
-              <p className="text-red-500 text-sm mt-1 italic">{errors[name]}</p>
-            )}
-          </div>
-          ))}
+          {fields.map(
+            ({
+              name,
+              label,
+              type,
+              placeholder,
+              maxLength,
+              minLength,
+              option = [],
+              ...rest
+            }) => (
+              <div className="mb-4" key={name}>
+                <label className="italic">{label}</label>
+
+                {type === "select" ? (
+                  <select
+                    name={name}
+                    value={form[name]}
+                    onChange={handleChange}
+                    className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                    required
+                  >
+                    <option value="">Select {label.replace(":", "")}</option>
+                    {option.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={type}
+                    name={name}
+                    placeholder={placeholder}
+                    className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                    value={form[name]}
+                    onChange={handleChange}
+                    required
+                    {...rest}
+                  />
+                )}
+                {errors[name] && (
+                  <p className="text-red-500 text-sm mt-1 italic">
+                    {errors[name]}
+                  </p>
+                )}
+              </div>
+            )
+          )}
+          <div className="mb-3 text-center space-y-2">
+            <Link
+              to="/email"
+              className="italic text-sm block text-blue-800 w-full py-1 cursor:pointer underline hover:text-red-500"
+            >
+              Login with Email
+            </Link>
+            <Link
+              to="/phone"
+              className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
+            >
+              Login with Phone Number
+            </Link>
           <button
             type="submit"
             className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
           >
             Register
           </button>
+          </div>
         </form>
       </div>
     </div>
