@@ -27,7 +27,7 @@ const ViewUser = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/users/${id}`)
+      .get(`http://localhost:5000/api/users/${id}`)
       .then((res) => setUser(res.data))
       .catch((err) => {
         console.error(err);

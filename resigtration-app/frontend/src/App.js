@@ -7,17 +7,17 @@ import EditUser from './pages/EditUser';
 import ViewUsers from './pages/ViewUsers';
 import PhoneRegistration from './pages/PhoneRegistration';
 import EmailRegistration from './pages/EmailRegistration';
+import Login from './pages/Login';
+import NavbarRegister from './components/NavbarRegister';
 
 function App() {
   return (
     <>
       <BrowserRouter>
-      <div className='p-4 space-x-4 shadow text-black-800 bg-blue-500 sticky flex justify-end'>
-        <Link to='/users' className='mx-5 mr-2 hover:underline'>Users</Link>
-        <Link to='/' className='mx-5 mr-2 hover:underline'>Register</Link>
-      </div>
+        <NavbarRegister />
         <Routes>
           <Route path="/" element={<RegistrationForm />} />
+          <Route path="/login" element={<Login />} />         
           <Route path='/phone' element={<PhoneRegistration />} />
           <Route path='/email' element={<EmailRegistration />}/>
           <Route path='/users' element={<AllUser />} />

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { genrateOtpExpiry } from "../utils/OtpGenrator";
 
 const PhoneRegistration = () => {
@@ -14,6 +14,8 @@ const PhoneRegistration = () => {
   const [isVerified, setIsVerified] = useState(false);
 
   const indianPhoneRegex = /^(\+91)?[6-9]\d{9}$/;
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setIndPhone(e.target.value);
@@ -45,6 +47,7 @@ const PhoneRegistration = () => {
     if (enteredOtp === otpData.otp) {
       setIsVerified(true);
       alert("Phone verified successfully. Logged in!");
+      navigate('/users')
     } else {
       alert("Invalid OTP. try again.");
     }

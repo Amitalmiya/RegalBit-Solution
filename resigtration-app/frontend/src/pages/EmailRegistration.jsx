@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { genrateOtpExpiry } from "../utils/OtpGenrator";
 
 const EmailRegistration = () => {
@@ -14,6 +14,8 @@ const EmailRegistration = () => {
   const [isVerified, setIsVerified] = useState(false);
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
+
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     setEmail(e.target.value);
@@ -45,6 +47,7 @@ const EmailRegistration = () => {
     if (enteredOtp === otpData.otp) {
       setIsVerified(true);
       alert("Email verified successfully.");
+      navigate('/users')
     } else {
       alert("Invalid OTP. try again.");
     }
@@ -84,7 +87,7 @@ const EmailRegistration = () => {
                 to="/phone"
                 className="mt-3 italic text-sm block text-blue-800 w-full py-1 cursor:pointer underline hover:text-red-500"
               >
-                Login with Phone Number
+                Login with (+91 IND)Phone Number
               </Link>
               <Link
                 to="/"

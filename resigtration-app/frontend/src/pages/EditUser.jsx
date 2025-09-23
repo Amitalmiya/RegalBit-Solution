@@ -125,7 +125,7 @@ const EditUser = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/users/${id}`)
+      .get(`http://localhost:5000/api/users/${id}`)
       .then((res) => setEdit(res.data))
       .catch((err) => alert(`Error fetching user: ${err.message}`))
   }, [id]);
@@ -134,7 +134,7 @@ const EditUser = () => {
     e.preventDefault();
 
     try {
-      const existingUsers = await axios.get("http://localhost:5000/users");
+      const existingUsers = await axios.get("http://localhost:5000/api/users");
 
       const userEmailExist = existingUsers.data.some(
         (u) => u.email === edit.email && u.id !== parseInt(id)
@@ -152,7 +152,7 @@ const EditUser = () => {
         return;
       }
 
-      await axios.put(`http://localhost:5000/users/${id}`, edit);
+      await axios.put(`http://localhost:5000/api/users/${id}`, edit);
       alert("User Data Update Successfully!");
       navigate("/users");
     } catch (error) {

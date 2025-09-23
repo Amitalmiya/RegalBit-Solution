@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { RegexPatterns } from "../utils/RegexPatterns";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const initialForm = {
   phone: "",
@@ -174,12 +174,14 @@ const RegistrationForm = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const navigate = useNavigate();
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     try {
-      const existingUsers = await axios.get("http://localhost:5000/users");
+      const existingUsers = await axios.get("http://localhost:5000/api/users");
 
       const userExists = existingUsers.data.some(
         (u) => u.userName === form.userName
@@ -198,11 +200,12 @@ const RegistrationForm = () => {
         alert("User email already exists");
       }
 
-      const res = await axios.post("http://localhost:5000/users", form);
+      const res = await axios.post("http://localhost:5000/api/users", form);
 
       if (res.status === 200 || res.status === 201) {
         alert("Data submitted successfully");
         setForm(initialForm);
+        navigate('/users')
       } else {
         alert("Something went wrong");
       }
@@ -279,7 +282,7 @@ const RegistrationForm = () => {
               to="/phone"
               className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
             >
-              Login with Phone Number
+              Login with (+91 IND)Phone Number
             </Link>
           <button
             type="submit"

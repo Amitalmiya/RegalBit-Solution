@@ -13,7 +13,7 @@ const AllUser = () => {
 
   const getUser = async () => {
     await axios
-      .get("http://localhost:5000/users")
+      .get("http://localhost:5000/api/users")
       .then((res) => setData(res.data));
   };
 
@@ -26,7 +26,7 @@ const AllUser = () => {
     const confirmed = window.confirm("Are you sure you want delete this user?");
     if (confirmed) {
         await axios
-          .delete(`http://localhost:5000/users/${id}`)
+          .delete(`http://localhost:5000/api/users/${id}`)
           .then((res) => alert("Delete Succesfully"));
         getUser();
     } else {
@@ -73,7 +73,6 @@ const AllUser = () => {
                     <button className="p-2 rounded hover:bg-gray-200 cursor-pointer" onClick={()=> setDropDown(!dropdown === user.id ? null : user.id)}><CiMenuKebab /></button>
                     {dropdown === user.id && (
                     <div className="absolute right-0 mt-2 w-40 bg-gray-100 border rounderd-lg shadow-lg">
-                        <select><option></option></select>
                         <button className="block w-full text-left px-2 py-1 bg-blue-50 hover:bg-gray-400 text-blue-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/view/${user.id}`)}} >View User</button>
                         <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-green-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/edit/${user.id}`)}} >Edit User</button>
                         <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-red-600 cursor-pointer" onClick={()=> {setDropDown(false); handleDelete(user.id)}} >Delete User</button>
