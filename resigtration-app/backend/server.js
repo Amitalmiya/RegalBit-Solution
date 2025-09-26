@@ -4,6 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const {pool} = require('./config/db')
 const usersRoutes = require('./routes/userRoutes');
+const otpRoutes = require('./routes/authRouter')
 
 app.use(express.json());
 app.use(cors());
@@ -13,6 +14,8 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/users', usersRoutes);
+
+app.use('/api/auth', otpRoutes);
 
 
 async function initDB() {
