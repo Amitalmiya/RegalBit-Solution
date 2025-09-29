@@ -47,7 +47,7 @@ const PhoneRegistration = () => {
         phone,
       });
 
-      console.log("OTP sent:", res.data.otp); // Only for testing
+      console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your phone number!");
       setOtpSent(true);
 
@@ -63,8 +63,8 @@ const PhoneRegistration = () => {
 
     try {
       const res = await axios.post("http://localhost:5000/api/auth/signup/verify-otp", {
-        phone,
         userName,
+        phone,
         password,
         otp: enteredOtp
       });
@@ -109,7 +109,7 @@ const PhoneRegistration = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              </div>
+            </div>
             <div className="mb-3">
               <label className="italic">Phone No (+91 IND):</label>
               <input
@@ -149,7 +149,7 @@ const PhoneRegistration = () => {
         ) : !isVerified ? (
           <form onSubmit={handleVerifyOtp} className="py-10">
             <div className="mb-3">
-              <label className="italic">Enter OTP:</label>
+              <label className="italic">Enter OTP : </label>
               <input
                 type="text"
                 placeholder="Enter 6-digit OTP"

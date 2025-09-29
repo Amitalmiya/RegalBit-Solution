@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { genrateOtpExpiry } from "../utils/OtpGenrator";
+import axios from "axios";
 
 const EmailRegistration = () => {
+
   const [email, setEmail] = useState("");
+
+  const [userName, setUserName] = useState("");
+
+  const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
 
@@ -15,41 +20,65 @@ const EmailRegistration = () => {
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
 
-  const navigate = useNavigate()
+  const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setEmail(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!emailRegex.test(email)) {
       setError("Enter a valid email address");
       return;
     }
+
+    if (!userNameRegex.test(userName)) {
+      setError("Enter a valid Username");
+    }
+    if (!passwordRegex.test(password)) {
+      setError("Enter a valid Password");
+    }
     setError("");
 
-    const { otp, expireTime } = genrateOtpExpiry(60);
-    setOtpData({ otp, expireTime });
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup/request-otp",
+        {
+          userName,
+          email,
+          password,
+        }
+      );
+      console.log("OTP sent:", res.data.otp);
+      alert("OTP sent to your Email Address");
+      setOtpData(true);
 
-    console.log(`Genrated OTP`, otp);
-    alert("OTP send to your email address!");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to send OTP");
+    }
   };
 
-  const handleOtpVerify = (e) => {
+  const handleOtpVerify = async (e) => {
     e.preventDefault();
-    if (!otpData) return;
-
-    if (Date.now() > otpData.expireTime) {
-      alert(`OTP expired. please try again.`);
-      return;
-    }
-    if (enteredOtp === otpData.otp) {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup/verify-otp",
+        {
+          email: otpData.email,
+          otp: enteredOtp,
+        }
+      );
+      alert(res.data.message);
       setIsVerified(true);
-      alert("Email verified successfully.");
-      navigate('/users')
-    } else {
-      alert("Invalid OTP. try again.");
+      navigate("/users");
+    } catch (error) {
+      alert(error.response?.data?.message || "OTP verification failed");
     }
   };
 
@@ -63,6 +92,17 @@ const EmailRegistration = () => {
         {!otpData ? (
           <form action="" className="py-10" onSubmit={handleSubmit}>
             <div className="mb-3">
+              <label className="italic">Username :</label>
+              <input
+                type="text"
+                placeholder="Enter your Username"
+                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="mb-3">
               <label htmlFor="" className="italic">
                 Email Address :
               </label>
@@ -74,6 +114,17 @@ const EmailRegistration = () => {
                 onChange={handleChange}
                 required
               />
+              <div className="mb-3">
+                <label className="italic">Password :</label>
+                <input
+                  type="password"
+                  placeholder="Enter password"
+                  className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
               {error && <p className="text-red-500 italicmt-1">{error}</p>}
             </div>
             <button

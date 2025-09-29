@@ -120,6 +120,8 @@ const RegistrationForm = () => {
 
   const [errors, setErrors] = useState({});
 
+  const [step, setStep] = useState(0);
+
   const validateForm = () => {
     const newErrors = {};
     if (!RegexPatterns.phone.test(form.phone)) {
@@ -205,7 +207,7 @@ const RegistrationForm = () => {
       if (res.status === 200 || res.status === 201) {
         alert("Data submitted successfully");
         setForm(initialForm);
-        navigate('/users')
+        navigate("/users");
       } else {
         alert("Something went wrong");
       }
@@ -215,14 +217,20 @@ const RegistrationForm = () => {
     }
   };
 
+  const fieldsPerStep = 4;
+  const startIndex = step * fieldsPerStep;
+  const endIndex = startIndex + fieldsPerStep;
+  const currentFields = fields.slice(startIndex, endIndex);
+
   return (
-    <div className="flex item-center justify-center  w-full bg-gray-100 min-h-screen py-8">
+    <div className="flex item-center justify-center w-full bg-gray-100 min-h-screen py-8">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
         <h2 className="text-2xl text-center font-bold underline">
           Registration Form
         </h2>
-        <form action="" className="py-10" onSubmit={handleFormSubmit}>
-          {fields.map(
+
+        <form className="py-10" onSubmit={handleFormSubmit}>
+          {currentFields.map(
             ({
               name,
               label,
@@ -231,7 +239,6 @@ const RegistrationForm = () => {
               maxLength,
               minLength,
               option = [],
-              ...rest
             }) => (
               <div className="mb-4" key={name}>
                 <label className="italic">{label}</label>
@@ -241,7 +248,7 @@ const RegistrationForm = () => {
                     name={name}
                     value={form[name]}
                     onChange={handleChange}
-                    className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                    className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
                     required
                   >
                     <option value="">Select {label.replace(":", "")}</option>
@@ -256,11 +263,12 @@ const RegistrationForm = () => {
                     type={type}
                     name={name}
                     placeholder={placeholder}
-                    className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                    className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
                     value={form[name]}
                     onChange={handleChange}
                     required
-                    {...rest}
+                    maxLength={maxLength}
+                    minLength={minLength}
                   />
                 )}
                 {errors[name] && (
@@ -271,25 +279,50 @@ const RegistrationForm = () => {
               </div>
             )
           )}
-          <div className="mb-3 text-center space-y-2">
-            <Link
-              to="/email"
-              className="italic text-sm block text-blue-800 w-full py-1 cursor:pointer underline hover:text-red-500"
-            >
-              Login with Email
-            </Link>
-            <Link
-              to="/phone"
-              className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
-            >
-              Login with (+91 IND)Phone Number
-            </Link>
-          <button
-            type="submit"
-            className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
-          >
-            Register
-          </button>
+
+          <div className="flex justify-between mt-2">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={() => setStep((prev) => prev - 1)}
+                className="italic border rounded-[5px] bg-gray-300 px-4 py-2 hover:bg-gray-400"
+              >
+                Back
+              </button>
+            )}
+
+            {step < Math.ceil(fields.length / fieldsPerStep) - 1 ? (
+              <button
+                type="button"
+                onClick={() => setStep((prev) => prev + 1)}
+                className="italic border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto"
+              >
+                Next
+              </button>
+            ) : (
+              <div className="">
+                <button
+                  type="submit"
+                  className="italic border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto"
+                >
+                  Register
+                </button>
+                {/* <div className="text center justify-center">
+                  <Link
+                    to="/email"
+                    className="floaitalic text-sm block text-blue-800 underline hover:text-red-500"
+                  >
+                    Login with Email
+                  </Link>
+                  <Link
+                    to="/"
+                    className="underline text-sm text-blue-800 italic block hover:text-red-500"
+                  >
+                    Register Yourself
+                  </Link>
+                </div> */}
+              </div>
+            )}
           </div>
         </form>
       </div>
