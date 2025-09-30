@@ -93,7 +93,7 @@ const fields = [
     label: "Time :",
     type: "text",
     placeholder: "HH:MM AM/PM",
-    maxLength: 7,
+    maxLength: 9,
   },
   {
     name: "hexaDecimalColorCode",
@@ -124,6 +124,7 @@ const RegistrationForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
+
     if (!RegexPatterns.phone.test(form.phone)) {
       newErrors.phone = "Invalid Phone Number";
     }
@@ -168,7 +169,13 @@ const RegistrationForm = () => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+    const firstErrorKey = Object.keys(newErrors)[0];
+    alert(newErrors[firstErrorKey]); 
+    return false;
+  }
+
+  return true;
   };
 
   const handleChange = (e) => {
@@ -223,7 +230,7 @@ const RegistrationForm = () => {
   const currentFields = fields.slice(startIndex, endIndex);
 
   return (
-    <div className="flex item-center justify-center w-full bg-gray-100 min-h-screen py-8">
+    <div className="flex item-center justify-center w-full min-h bg-full bg-gray-100 py-20">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
         <h2 className="text-2xl text-center font-bold underline">
           Registration Form
@@ -295,7 +302,7 @@ const RegistrationForm = () => {
               <button
                 type="button"
                 onClick={() => setStep((prev) => prev + 1)}
-                className="italic border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto"
+                className="italic mb-3 border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto "
               >
                 Next
               </button>
@@ -307,22 +314,22 @@ const RegistrationForm = () => {
                 >
                   Register
                 </button>
-                {/* <div className="text center justify-center">
-                  <Link
-                    to="/email"
-                    className="floaitalic text-sm block text-blue-800 underline hover:text-red-500"
-                  >
-                    Login with Email
-                  </Link>
-                  <Link
-                    to="/"
-                    className="underline text-sm text-blue-800 italic block hover:text-red-500"
-                  >
-                    Register Yourself
-                  </Link>
-                </div> */}
               </div>
             )}
+          </div>
+          <div className="text-center justify-center">
+            <Link
+              to="/email"
+              className="underline mb-2 italic text-sm block text-blue-800 underline hover:text-red-500 "
+            >
+              Login with Email
+            </Link>
+            <Link
+              to="/phone"
+              className="underline text-sm text-blue-800 italic block hover:text-red-500"
+            >
+              Login with Phone(IND +91)
+            </Link>
           </div>
         </form>
       </div>

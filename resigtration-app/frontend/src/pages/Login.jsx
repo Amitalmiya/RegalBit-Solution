@@ -29,7 +29,7 @@ const Login = () => {
       if (res.data.length > 0) {
         setSuccess("Login Successfully");
         navigate('/users')
-        console.log("logged in user", res.data[0]);
+        // console.log("logged in user", res.data[0]);
       } else {
         setError("Invalid username or password");
       }

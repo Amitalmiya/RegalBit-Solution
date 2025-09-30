@@ -18,6 +18,8 @@ const EmailRegistration = () => {
 
   const [isVerified, setIsVerified] = useState(false);
 
+  const [disableTime, setDisableTime] = useState(0);
+
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
 
   const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
@@ -48,17 +50,12 @@ const EmailRegistration = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/signup/request-otp",
-        {
-          userName,
-          email,
-          password,
-        }
+        "http://localhost:5000/api/auth/signup/requestemail-otp",
+        { userName, email, password }
       );
       console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your Email Address");
       setOtpData(true);
-
     } catch (err) {
       setError(err.response?.data?.error || "Failed to send OTP");
     }
@@ -68,9 +65,11 @@ const EmailRegistration = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/signup/verify-otp",
+        "http://localhost:5000/api/auth/signup/verifyemail-otp",
         {
-          email: otpData.email,
+          userName,
+          email,
+          password,
           otp: enteredOtp,
         }
       );
@@ -79,6 +78,21 @@ const EmailRegistration = () => {
       navigate("/users");
     } catch (error) {
       alert(error.response?.data?.message || "OTP verification failed");
+      if (error.response?.data?.error?.includes("Try again in")) {
+        const match = error.response.data.error.match(/(\d+)/);
+        if (match) {
+          setDisableTime(parseInt(match[1]) * 60);
+          const timer = setInterval(() => {
+            setDisableTime((prev) => {
+              if (prev <= 1) {
+                clearInterval(timer);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      }
     }
   };
 
@@ -158,14 +172,18 @@ const EmailRegistration = () => {
                 className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
                 value={enteredOtp}
                 onChange={(e) => setEnteredOtp(e.target.value)}
+                maxLength={6}
                 required
               />
             </div>
             <button
               type="submit"
               className="italic border rounded-[5px] w-full bg-green-500 py-2 cursor-pointer hover:bg-green-300"
+              disabled={disableTime > 0}
             >
-              Verify Otp
+              {disableTime > 0
+                ? `Try again in ${Math.ceil(disableTime / 60)} min`
+                : "Verify OTP"}
             </button>
           </form>
         ) : (

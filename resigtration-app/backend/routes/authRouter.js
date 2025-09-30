@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
-const { requestSignupOtp, verifySignupOtp, requestLoginOtp, verifyLoginOtp } = require('../controllers/authController')
+const { requestPhoneOtp, verifyPhoneOtp, requestEmailOtp, verifyEmailOtp } = require('../controllers/authController')
 
-router.post("/signup/request-otp", requestSignupOtp);
-router.post("/signup/verify-otp", verifySignupOtp);
+router.post("/signup/requestphone-otp", requestPhoneOtp);
+router.post("/signup/verifyphone-otp", verifyPhoneOtp);
 
-router.post("/login/request-otp", requestLoginOtp);
-router.post("/login/verify-otp", verifyLoginOtp);
-
+router.post("/signup/requestemail-otp", requestEmailOtp);
+router.post("/signup/verifyemail-otp", verifyEmailOtp);
 
 module.exports = router;

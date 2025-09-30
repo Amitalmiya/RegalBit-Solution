@@ -1,13 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const session = require('express-session')
 const PORT = process.env.PORT || 5000;
+const secret = 'Amit@123$'
 const {pool} = require('./config/db')
 const usersRoutes = require('./routes/userRoutes');
 const otpRoutes = require('./routes/authRouter')
 
 app.use(express.json());
 app.use(cors());
+
+app.use(
+    session({
+        secret: secret,
+        resave: false,
+        saveUninitialized: true,
+        cookir: { maxAge: 1000 * 60 * 60, secure:false }
+    })
+);
 
 app.get('/', (req, res) => {
     res.send('Server is Live')

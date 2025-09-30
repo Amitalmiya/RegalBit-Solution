@@ -10,5 +10,22 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
+const poolPhone = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: 'Amit@123',
+  database: 'phone_login',  
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
-module.exports = { pool};
+const poolEmail = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: 'Amit@123',
+  database: 'email_login',  
+  waitForConnections: true,
+  connectionLimit: 10,
+});
+
+module.exports = { pool, poolPhone, poolEmail};
