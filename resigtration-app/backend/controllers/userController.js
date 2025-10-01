@@ -1,4 +1,5 @@
 const { pool } = require("../config/db");
+const bcrypt = require('bcrypt')
 
 let users = [];
 
@@ -31,16 +32,18 @@ const userRegistration = async (req, res) => {
     } = req.body;
 
     const formattedDOB = new Date(dateOfBirth).toISOString().split('T')[0];
-    const userTime = formatTimeToMySQL(timeFormat); // convert to 'HH:MM:SS' format
+    const userTime = formatTimeToMySQL(timeFormat);
 
     if (!userName || !email) {
       return res.status(400).json({ message: "Name and Email are required" });
     }
 
+    const password_hash = await bcrypt.hash(password, 10);
+
     const [result] = await pool.query(
       `INSERT INTO users
-      (userName, email, phone, dateOfBirth, socialSecurityNo, driverLicense, gender, bloodGroup, zipCode, websiteUrl, creditCardNo, timeFormat, hexaDecimalColorCode, password)
-      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (userName, email, phone, dateOfBirth, socialSecurityNo, driverLicense, gender, bloodGroup, zipCode, websiteUrl, creditCardNo, timeFormat, hexaDecimalColorCode,password, password_hash)
+      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userName,
         email,
@@ -56,6 +59,7 @@ const userRegistration = async (req, res) => {
         timeFormat,
         hexaDecimalColorCode,
         password,
+        password_hash,
       ]
     );
 

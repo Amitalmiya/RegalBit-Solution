@@ -117,7 +117,7 @@ const fields = [
 const EditUser = () => {
   const { id } = useParams();
 
-  const [edit, setEdit] = useState(initialForm);
+  const [edit, setEdit] = useState({initialForm});
 
   const [errors, setErrors] = useState({});
 
@@ -132,7 +132,6 @@ const EditUser = () => {
 
   const handleFormEdit = async (e) => {
     e.preventDefault();
-
     try {
       const existingUsers = await axios.get("http://localhost:5000/api/users");
 
@@ -200,7 +199,7 @@ const EditUser = () => {
                   name={name}
                   placeholder={placeholder}
                   className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                  value={edit[name]}
+                  value={edit[name] || ""}
                   onChange={(e) => {
                     setEdit({ ...edit, [name]: e.target.value });
                   }}

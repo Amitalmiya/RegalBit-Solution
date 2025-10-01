@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const EmailRegistration = () => {
-
   const [email, setEmail] = useState("");
 
   const [userName, setUserName] = useState("");
@@ -49,6 +48,15 @@ const EmailRegistration = () => {
     setError("");
 
     try {
+      const existingUsers = await axios.get("http://localhost:5000/api/users");
+      const emailExist = existingUsers.data.some(
+        (u) => u.email.toLowerCase() === email.toLowerCase()
+      );
+
+      if (emailExist) {
+        setError("Email already exists.please login or use a different email.")
+      }
+      
       const res = await axios.post(
         "http://localhost:5000/api/auth/signup/requestemail-otp",
         { userName, email, password }
@@ -97,10 +105,10 @@ const EmailRegistration = () => {
   };
 
   return (
-    <div className="flex item-center justify-center w-full min-h bg-full bg-gray-100 py-20">
+    <div className="flex items-center justify-center w-full min-h-screen bg-gray-100 py-20">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
         <h2 className="text-2xl text-center font-bold underline">
-          Login with Email Address
+          Login / Signup with Email Address
         </h2>
 
         {!otpData ? (
@@ -182,7 +190,11 @@ const EmailRegistration = () => {
               disabled={disableTime > 0}
             >
               {disableTime > 0
-                ? `Try again in ${Math.ceil(disableTime / 60)} min`
+                ? `Try again in ${Math.floor(disableTime / 60)
+                    .toString()
+                    .padStart(2, "0")}:${(disableTime % 60)
+                    .toString()
+                    .padStart(2, "0")}`
                 : "Verify OTP"}
             </button>
           </form>

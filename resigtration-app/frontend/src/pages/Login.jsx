@@ -90,7 +90,7 @@ const Login = () => {
               Register Yourself
             </Link>
             <Link
-              to="/"
+              to="/email"
               className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
             >
               Login with Email

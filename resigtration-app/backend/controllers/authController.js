@@ -12,6 +12,15 @@ const requestPhoneOtp = async (req, res) => {
     if (!userName || !password)
       return res.status(400).json({ error: "Username and password required" });
 
+    const [existingUser] = await poolPhone.query(
+      `SELECT * FROM users WHERE phone =? OR userName = ?`,
+      [phone, userName]
+    );
+
+    if(existingUser.length > 0) {
+      return res.status(400).json({ error: "Phone or Username already exists. Please login."});
+    }
+
     const otp = generateOtp();
     const expireAt = new Date(Date.now() + 1 * 60 * 1000);
 
@@ -124,6 +133,17 @@ const requestEmailOtp = async (req, res) => {
 
     if (!userName || !password)
       return res.status(400).json({ error: "Username and password required" });
+    
+    const [existingUser] = await poolEmail.query(
+      `SELECT * FROM users WHERE email =? OR userName = ?`,
+      [email.toLowerCase(), userName]
+    );
+
+    if(existingUser.length > 0) {
+      return res.status(400).json({ error: "Email or Username already exists. Please login."});
+    }
+
+
 
     const otp = generateOtp();
 

@@ -74,7 +74,7 @@ const AllUser = () => {
                     {dropdown === user.id && (
                     <div className="absolute right-0 mt-2 w-40 bg-gray-100 border rounderd-lg shadow-lg">
                         <button className="block w-full text-left px-2 py-1 bg-blue-50 hover:bg-gray-400 text-blue-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/view/${user.id}`)}} >View User</button>
-                        <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-green-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/edit/${user.id}`)}} >Edit User</button>
+                        <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-green-600 cursor-pointer" onClick={()=> {setDropDown(false); navigate(`/edit/${user.id}`)}}>Edit User</button>
                         <button className="block w-full text-left px-2 py-1 hover:bg-gray-400 text-red-600 cursor-pointer" onClick={()=> {setDropDown(false); handleDelete(user.id)}} >Delete User</button>
                     </div>
                     )}
