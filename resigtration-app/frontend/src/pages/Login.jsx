@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  
+  const [userName, setUsername] = useState("");
 
   const [password, setPassword] = useState("");
 
@@ -15,26 +16,29 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError();
-    setSuccess();
+    setError("");
+    setSuccess("");
 
-    if (!username || !password) {
+    if (!userName || !password) {
       setError("All fields are required");
       return;
     }
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/users?username=${username}&password=${password}`
-      );
-      if (res.data.length > 0) {
-        setSuccess("Login Successfully");
-        navigate('/users')
-        // console.log("logged in user", res.data[0]);
-      } else {
-        setError("Invalid username or password");
+      const res = await axios.post(
+        `http://localhost:5000/api/users/login`, {
+          userName: userName,
+          password,
+        });
+      if (res.status === 200) {
+        setSuccess('Login Successfully');
+        alert('Login successfully!!')
+
+        localStorage.setItem("userToken", res.data.user.id);
+
+        navigate(`/profile/${res.data.user.id}`)
       }
     } catch (err) {
-      setError("Server error. Please try again later.");
+      setError( err.response?.data?.message || "Server error. Please try again later.");
       console.log(err);
     }
   };
@@ -52,11 +56,13 @@ const Login = () => {
               type="text"
               placeholder="Enter your username"
               className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-              value={username}
+              value={userName}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            {/* {error && <p className="text-red-500 italicmt-1">{error}</p>} */}
+            {error && <p className="text-red-500 italic mt-1">{error}</p>}
+            {success && <p className="text-red-500 italic mt-1">{success}</p>}
+
           </div>
           <div className="mb-5">
             <label htmlFor="" className="italic">
@@ -72,7 +78,7 @@ const Login = () => {
             />
           </div>
           {error && <p className="text-red-500 italic mb-3">{error}</p>}
-          {success && <p className="text-green-600 italic mb-3">{success}</p>}
+          {/* {success && <p className="text-green-600 italic mb-3">{success}</p>} */}
           <div className="mb-2">
             <button
               type="submit"

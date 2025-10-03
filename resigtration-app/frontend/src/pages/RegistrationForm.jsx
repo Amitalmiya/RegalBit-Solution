@@ -186,43 +186,54 @@ const RegistrationForm = () => {
   const navigate = useNavigate();
 
   const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
 
-    try {
-      const existingUsers = await axios.get("http://localhost:5000/api/users");
+  if (!validateForm()) return;
 
-      const userExists = existingUsers.data.some(
-        (u) => u.userName === form.userName
-      );
+  try {
+    const existingUsers = await axios.get("http://localhost:5000/api/users");
 
-      if (userExists) {
-        alert("Username already exists");
+    const userExists = existingUsers.data.some(
+      (u) => u.userName === form.userName
+    );
+    if (userExists) {
+      alert("Username already exists");
+      return;
+    }
+
+    const userEmailExist = existingUsers.data.some(
+      (u) => u.email === form.email
+    );
+    if (userEmailExist) {
+      alert("User email already exists");
+      return;
+    }
+
+    const res = await axios.post("http://localhost:5000/api/users/registration", form);
+
+    // console.log("Registration Response:", res.data);
+
+    if (res.status === 200 || res.status === 201) {
+      alert("Data submitted successfully");
+
+      setForm(initialForm);
+
+      const userId = res.data.id || res.data.user?.id;
+      if (!userId) {
+        console.error("User ID not found in response!");
         return;
       }
+      localStorage.setItem("userToken", userId);
 
-      const userEmailExist = existingUsers.data.some(
-        (u) => u.email === form.email
-      );
-
-      if (userEmailExist) {
-        alert("User email already exists");
-      }
-
-      const res = await axios.post("http://localhost:5000/api/users", form);
-
-      if (res.status === 200 || res.status === 201) {
-        alert("Data submitted successfully");
-        setForm(initialForm);
-        navigate("/users");
-      } else {
-        alert("Something went wrong");
-      }
-    } catch (error) {
-      alert(error.response?.data?.message || "Server Error");
-      console.log(error);
+      navigate(`/profile/${userId}`);
+    } else {
+      alert("Something went wrong");
     }
-  };
+  } catch (error) {
+    console.error("Registration Error:", error);
+    alert(error.response?.data?.message || "Server Error");
+  }
+};
 
   const fieldsPerStep = 4;
   const startIndex = step * fieldsPerStep;

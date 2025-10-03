@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const PhoneRegistration = () => {
+  
   const [userName, setUserName] = useState("");
 
   const [password, setPassword] = useState("");
@@ -20,6 +21,7 @@ const PhoneRegistration = () => {
   const [disableTime, setDisableTime] = useState(0);
 
   const navigate = useNavigate();
+
   const indianPhoneRegex = /^(\+91)?[6-9]\d{9}$/;
 
   const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
@@ -80,12 +82,19 @@ const PhoneRegistration = () => {
         }
       );
 
-      alert(res.data.message);
-      setIsVerified(true);
-      navigate("/users");
+      if(res.status === 200 || res.status === 201){
+        alert("Registration Succesfully");
+
+        const userId = res.data.id;
+        localStorage.setItem("userToken", userId);
+        setIsVerified(true);
+        navigate(`/profile/${userId}`)
+      }
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || "OTP verification failed");
+      
+      
       
       if (err.response?.data?.error?.includes("Try again in")) {
         const match = err.response.data.error.match(/(\d+)/);

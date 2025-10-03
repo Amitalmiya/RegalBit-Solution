@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const EmailRegistration = () => {
+  
   const [email, setEmail] = useState("");
 
   const [userName, setUserName] = useState("");
@@ -82,8 +83,12 @@ const EmailRegistration = () => {
         }
       );
       alert(res.data.message);
+
+      localStorage.setItem("userToken", res.data.token || "dummyToken");
+      localStorage.setItem("userId", res.data.user?.id || ""); 
+
       setIsVerified(true);
-      navigate("/users");
+      navigate("/home");
     } catch (error) {
       alert(error.response?.data?.message || "OTP verification failed");
       if (error.response?.data?.error?.includes("Try again in")) {

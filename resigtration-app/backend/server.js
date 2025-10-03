@@ -9,6 +9,7 @@ const usersRoutes = require('./routes/userRoutes');
 const otpRoutes = require('./routes/authRouter')
 
 app.use(express.json());
+
 app.use(cors());
 
 app.use(
@@ -16,7 +17,7 @@ app.use(
         secret: secret,
         resave: false,
         saveUninitialized: true,
-        cookir: { maxAge: 1000 * 60 * 60, secure:false }
+        cookie: { maxAge: 1000 * 60 * 60, secure: false }
     })
 );
 
