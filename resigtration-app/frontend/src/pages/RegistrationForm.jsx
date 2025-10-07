@@ -191,31 +191,12 @@ const RegistrationForm = () => {
   if (!validateForm()) return;
 
   try {
-    const existingUsers = await axios.get("http://localhost:5000/api/users");
+    const res = await axios.post("http://localhost:5000/api/users", form);
 
-    const userExists = existingUsers.data.some(
-      (u) => u.userName === form.userName
-    );
-    if (userExists) {
-      alert("Username already exists");
-      return;
-    }
-
-    const userEmailExist = existingUsers.data.some(
-      (u) => u.email === form.email
-    );
-    if (userEmailExist) {
-      alert("User email already exists");
-      return;
-    }
-
-    const res = await axios.post("http://localhost:5000/api/users/registration", form);
-
-    // console.log("Registration Response:", res.data);
+    console.log("Registration Response:", res.data);
 
     if (res.status === 200 || res.status === 201) {
       alert("Data submitted successfully");
-
       setForm(initialForm);
 
       const userId = res.data.id || res.data.user?.id;

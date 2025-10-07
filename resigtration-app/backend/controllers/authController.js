@@ -1,5 +1,8 @@
 const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'Amit@123$'
 
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -133,8 +136,30 @@ const verifyPhoneOtp = async (req, res) => {
       [userName, phone, passwordHash]
     );
 
-    req.session.user = { id: result.insertId, userName, phone, email: null };
-    res.json({ message: "User created and logged in with phone successfully" });
+
+    const token = jwt.sign(
+      {
+        id: result.insertId,
+        userName,
+        phone
+       },
+       { expiresIn: '7d'}
+    );
+    // req.session.user = {
+    //   id: result.insertId,
+    //   userName,
+    //   phone,
+    //   message: "OTP verify Seccssfully!!",
+    // };
+    res.status(201).json({ 
+      message: "User created and logged in with phone successfully",
+      token,
+      user: { id:result.insertId,
+        userName,
+        phone
+       } 
+    
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server Error" });
@@ -274,46 +299,33 @@ const verifyEmailOtp = async (req, res) => {
       [userName, contact, passwordHash]
     );
 
-    req.session.user = {
-      id: result.insertId,
-      userName,
-      email: contact,
-      phone: null,
-    };
-    res.json({ message: "User created and logged in with email successfully" });
+    const token = jwt.sign(
+      {
+        id: result.insertId, 
+        userName,
+        email: contact
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // req.session.user = {
+    //   id: result.insertId,
+    //   userName,
+    //   email: contact,
+    //   phone: null,
+    // };
+    res.json({ 
+      message: "User created and logged in with email successfully",
+      token,
+      user: { id: result.insertId,
+        userName, 
+        email: contact
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server Error" });
-  }
-};
-
-const allUsers = async (req, res) => {
-  try {
-    
-    const userId = req.params.id;
-
-    const [userFromPhone] = await poolPhone.query(
-      "SELECT * FROM users WHERE id = ?",
-      [userId]
-    );
-    const [userFromEmail] = await poolEmail.query(
-      `SELECT * FROM users WHERE id = ?`,
-      [userId]
-    );
-
-    const [phoneUsers] = await poolPhone.query(`SELECT * FROM users`);
-    const [emailUsers] = await poolEmail.query(`SELECT * FROM users`);
-
-    const user = userFromPhone[0] || userFromEmail[0] || null;
-
-    res.status(200).json({
-      user,
-      phoneUsers,
-      emailUsers,
-    });
-
-  } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
 
@@ -322,5 +334,4 @@ module.exports = {
   verifyPhoneOtp,
   requestEmailOtp,
   verifyEmailOtp,
-  allUsers,
 };

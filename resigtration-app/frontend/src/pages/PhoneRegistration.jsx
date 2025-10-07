@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const PhoneRegistration = () => {
-  
   const [userName, setUserName] = useState("");
 
   const [password, setPassword] = useState("");
@@ -57,7 +56,6 @@ const PhoneRegistration = () => {
           phone,
         }
       );
-
       console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your phone number!");
       setOtpSent(true);
@@ -66,53 +64,69 @@ const PhoneRegistration = () => {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
+const handleVerifyOtp = async (e) => {
+  e.preventDefault();
 
-    if (!enteredOtp) return;
+  if (!enteredOtp) {
+    setError("Please enter the OTP");
+    return;
+  }
 
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/signup/verifyphone-otp",
-        {
-          userName,
-          phone,
-          password,
-          otp: enteredOtp,
-        }
-      );
-
-      if(res.status === 200 || res.status === 201){
-        alert("Registration Succesfully");
-
-        const userId = res.data.id;
-        localStorage.setItem("userToken", userId);
-        setIsVerified(true);
-        navigate(`/profile/${userId}`)
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/signup/verifyphone-otp",
+      {
+        userName,
+        phone,
+        password,
+        otp: enteredOtp,
       }
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.error || "OTP verification failed");
-      
-      
-      
-      if (err.response?.data?.error?.includes("Try again in")) {
-        const match = err.response.data.error.match(/(\d+)/);
-        if (match) {
-          setDisableTime(parseInt(match[1]) * 60);
-          const timer = setInterval(() => {
-            setDisableTime((prev) => {
-              if (prev <= 1) {
-                clearInterval(timer);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-        }
+    );
+
+    console.log("Login with Phone Response");
+
+    if (res.status === 200 || res.status === 201) {
+      alert("Data submitted sucessfully!!");
+    }
+
+    const userId = res.data.user.id;
+    
+    if (!userId) {
+      console.error("User ID missing in response:", res.data.user?.id);
+      setError("User verification failed");
+      return;
+    }
+
+    localStorage.setItem("userToken", userId);
+
+    setIsVerified(true);
+
+    navigate(`/profile/${userId}`);
+
+    alert("Registration Successful! Redirecting to profile...");
+  } catch (err) {
+    console.error("OTP verification error:", err);
+
+    const errorMessage = err.response?.data?.error || "OTP verification failed";
+    alert(errorMessage);
+
+    if (err.response?.data?.error?.includes("Try again in")) {
+      const match = err.response.data.error.match(/(\d+)/);
+      if (match) {
+        setDisableTime(parseInt(match[1], 10) * 60);
+        const timer = setInterval(() => {
+          setDisableTime((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       }
     }
-  };
+  }
+};
 
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-gray-100 py-20">
@@ -204,7 +218,7 @@ const PhoneRegistration = () => {
               disabled={disableTime > 0}
             >
               {disableTime > 0
-                ? `Try again in ${Math.ceil(disableTime / 60)} min`
+                ? `Tr y again in ${Math.ceil(disableTime / 60)} min`
                 : "Verify OTP"}
             </button>
           </form>

@@ -218,7 +218,7 @@ const EditUser = () => {
           <button
             type="button"
             className="italic ml-[60px] border rounded-[5px] w-1/3 bg-red-500 py-2 cursor-pointer hover:bg-red-300"
-            onClick={() => navigate("/users")}
+            onClick={() => navigate("/home")}
           >
             Cancel
           </button>

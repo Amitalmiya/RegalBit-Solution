@@ -1,20 +1,27 @@
 const express = require("express");
 const router = express.Router();
 
-const { loginUser, userRegistration, allUsers, getUserById, updateUser, deleteUser, toggleUserStatus } = require("../controllers/userController");
 
-router.post("/login", loginUser)
+const authenticateToken = require('../middleware/userMiddleware');
+
+const { loginUser, userRegistration, allUsers, getUserById, updateUser, deleteUser, toggleUserStatus, getUserProfile } = require("../controllers/userController");
 
 router.post("/registration", userRegistration);
+router.post("/login", loginUser)
 
-router.get("/", allUsers);
 
-router.get("/:id", getUserById);
 
-router.put("/:id", updateUser);
+router.get("/profile/:id", authenticateToken, getUserProfile)
 
-router.delete("/:id", deleteUser)
+router.get("/users", allUsers);
 
-router.patch("/:id/status", toggleUserStatus);
+router.put("/update/:id", authenticateToken, updateUser);
+
+router.delete("/delete/:id",authenticateToken, deleteUser)
+
+router.get("/:id",authenticateToken, getUserById);
+
+router.patch("/toggle-status/:id/status", toggleUserStatus);
+
 
 module.exports = router;

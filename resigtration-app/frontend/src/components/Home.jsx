@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 const Home = () => {
 
-     const {userName} = useParams()
+  const {userName} = useParams()
 
   return (
     <div className="p-4">

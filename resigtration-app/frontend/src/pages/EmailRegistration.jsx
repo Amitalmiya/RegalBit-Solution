@@ -42,9 +42,11 @@ const EmailRegistration = () => {
 
     if (!userNameRegex.test(userName)) {
       setError("Enter a valid Username");
+      return;
     }
     if (!passwordRegex.test(password)) {
       setError("Enter a valid Password");
+      return;
     }
     setError("");
 
@@ -56,6 +58,7 @@ const EmailRegistration = () => {
 
       if (emailExist) {
         setError("Email already exists.please login or use a different email.")
+        return;
       }
       
       const res = await axios.post(
@@ -64,6 +67,7 @@ const EmailRegistration = () => {
       );
       console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your Email Address");
+      setError("otp not send")
       setOtpData(true);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to send OTP");
@@ -85,10 +89,12 @@ const EmailRegistration = () => {
       alert(res.data.message);
 
       localStorage.setItem("userToken", res.data.token || "dummyToken");
+
       localStorage.setItem("userId", res.data.user?.id || ""); 
 
       setIsVerified(true);
-      navigate("/home");
+
+      navigate("/profile");
     } catch (error) {
       alert(error.response?.data?.message || "OTP verification failed");
       if (error.response?.data?.error?.includes("Try again in")) {

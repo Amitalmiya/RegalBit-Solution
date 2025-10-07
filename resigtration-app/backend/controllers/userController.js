@@ -1,7 +1,7 @@
-const { pool } = require("../config/db");
+const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
-
-let users = [];
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'Amit@123$';
 
 function formatTimeToMySQL(timeStr) {
   if (!timeStr) return null;
@@ -36,6 +36,12 @@ const userRegistration = async (req, res) => {
     const formattedDOB = new Date(dateOfBirth).toISOString().split("T")[0];
     const userTime = formatTimeToMySQL(timeFormat);
 
+    const [existing] = await pool.query(`SELECT * FROM users WHERE email = ? OR phone = ? OR userName = ?`, [email, phone, userName]) 
+
+    if (existing.length > 0 ) {
+      return res.status(400).json({message: "User already exists."})
+    }
+
     if (!userName || !email) {
       return res.status(400).json({ message: "Name and Email are required" });
     }
@@ -65,11 +71,18 @@ const userRegistration = async (req, res) => {
       ]
     );
 
+    const token = jwt.sign(
+      { id: result.insertId, userName, email, phone },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+
     res.status(201).json({
       id: result.insertId,
       userName,
       email,
       phone,
+      token,
       message: "User registered successfully",
     });
   } catch (err) {
@@ -80,8 +93,20 @@ const userRegistration = async (req, res) => {
 
 const allUsers = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM users");
-    res.status(200).json(rows);
+
+    const [mainUsers] = await pool.query("SELECT * FROM users");
+
+    const [ phoneUsers ] = await poolPhone.query(`SELECT * FROM users`);
+
+    const [ emailUsers ] = await poolEmail.query(`SELECT * FROM users`);
+
+    const allUsers = [...mainUsers, ...phoneUsers, ...emailUsers]; 
+
+    res.status(200).json({
+      message : "All users fetched successfully",
+      totalUsers: allUsers.length,
+      allUsers,
+    });
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });
   }
@@ -90,12 +115,19 @@ const allUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
+    
+    const [mainUsers] = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
 
-    if (rows.length === 0) {
+    const [phoneUsers] = await poolPhone.query("SELECT * FROM users WHERE id = ?", [id]);
+
+    const [emailUsers] = await poolEmail.query("SELECT * FROM users WHERE id = ?", [id]);
+
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0] || null;
+
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json(rows[0]);
+    res.status(200).json({message: "User fetched Successfully", user});
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });
   }
@@ -115,12 +147,22 @@ const updateUser = async (req, res) => {
       .join(", ");
     const values = [...Object.values(fields), id];
 
-    const [result] = await pool.query(
+    const [resultMain] = await pool.query(
       `UPDATE users SET ${setClause} WHERE id = ?`,
       values
     );
 
-    if (result.affectedRows === 0) {
+    const [resultPhone] = await poolPhone.query(
+      `UPDATE users SET ${setClause} WHERE id = ?`,
+      values
+    );
+
+    const [resultEmail] = await poolEmail.query(
+      `UPDATE users SET ${setClause} WHERE id = ?`,
+      values
+    );
+
+    if (resultMain.affectedRows === 0 && resultPhone.affectedRows === 0 && resultEmail.affectedRows === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -132,11 +174,17 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const [result] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "User not found" });
+    const { id } = req.params;
+    
+    const [resultMain] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
+
+    const [resultPhone] = await poolPhone.query("DELETE FROM users WHERE id = ?", [id]);
+
+    const [resultEmail] = await poolEmail.query("DELETE FROM users WHERE id = ?", [id]);
+
+    if (resultMain.affectedRows === 0 && resultPhone.affectedRows === 0 && resultEmail.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found in any database" });
     }
     res.status(200).json({ message: "User Delete Successfully" });
   } catch (err) {
@@ -147,14 +195,25 @@ const deleteUser = async (req, res) => {
 const toggleUserStatus = async (req, res) => {
   try {
     const { id } = req.params;
+
     const { status } = req.body;
 
-    const [result] = await pool.query(
-      `UPDATE users SET status = ? WHERE ID = ?`,
+    const [resultMain] = await pool.query(
+      `UPDATE users SET status = ? WHERE id = ?`,
       [status, id]
     );
 
-    if (result.affectedRows === 0) {
+    const [resultPhone] = await poolPhone.query(
+      `UPDATE users SET status = ? WHERE id = ?`,
+      [status, id]
+    );
+
+    const [resultEmail] = await poolEmail.query(
+      `UPDATE users SET status = ? WHERE id = ?`,
+      [status, id]
+    );
+
+    if (resultMain.affectedRows === 0 && resultPhone.affectedRows === 0 && resultEmail.affectedRows === 0) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -168,30 +227,56 @@ const toggleUserStatus = async (req, res) => {
 
 const loginUser = async (req, res) => {
   
+  try {
+  
   const { userName, password } = req.body;
 
   if (!userName || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  try {
-    const [rows] = await pool.query(`SELECT * FROM users WHERE userName = ?`, [
+    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE userName = ?`, [
+      userName,
+    ]);
+    
+    const [phoneUsers] = await poolPhone.query(`SELECT * FROM users WHERE userName = ?`, [
       userName,
     ]);
 
-    if (rows.length === 0) {
-      return res.status(401).json({ message: "Invalid username or password " });
+
+    const [emailUsers] = await poolEmail.query(`SELECT * FROM users WHERE userName = ?`, [
+      userName,
+    ]);
+
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0] || null;
+
+    if(!user){
+      return res.status(401).json({message: "Invalid username or password from database"})
     }
 
-    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password_hash);
 
-    if (user.password !== password) {
-      return res.status(401).json({message: "Inavalid username or password"})
+    if (!isMatch) {
+      return res.status(401).json({message: "Invalid username or password"});
     }
+
+    const token = jwt.sign(
+      {id: user.id,
+        userName: user.userName,
+        email: user.email,
+        phone: user.phone,
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    )
+    // if (user.password !== password) {
+    //   return res.status(401).json({message: "Inavalid username or password"})
+    // }
  
     res.status(200).json({
       message: "Login successfully",
-      user: { id: user.id, userName: user.userName, email: user.email },
+      token,
+      user: { id: user.id, userName: user.userName, email: user.email, phone: user.phone },
     });
   } catch (err) {
     console.log(err);
@@ -199,12 +284,43 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if(req.user.id != userId) {
+      return res.status(403).json({message: "Unauthorized access"});
+    }
+
+    const [mainUsers] = await pool.query(`SELECT id, userName, email, phone FROM users WHERE id = ?`, [userId]);
+
+    const [phoneUsers] = await poolPhone.query(`SELECT id, userName, phone FROM users WHERE id = ?`, [userId]);
+
+    const [emailUsers] = await poolEmail.query(`SELECT id, userName, email FROM users WHERE id = ?`, [userId]);
+
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
+    
+    if(!user) {
+      return res.status(404).json({message: "User not found"});
+    }
+
+    res.status(200).json({
+     message: "Profile fetched successfully",
+     user,
+    })
+  } catch(error) {
+    console.log(error);
+    res.status(500).json({message: "Server Error"})
+  }
+}
+
 module.exports = {
   userRegistration,
+  loginUser,
+  getUserProfile,
   allUsers,
   getUserById,
   updateUser,
   deleteUser,
   toggleUserStatus,
-  loginUser,
 };

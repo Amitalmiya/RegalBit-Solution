@@ -29,11 +29,12 @@ const Login = () => {
           userName: userName,
           password,
         });
-      if (res.status === 200) {
+      if (res.status === 200 || res.status === 201) {
         setSuccess('Login Successfully');
         alert('Login successfully!!')
 
         localStorage.setItem("userToken", res.data.user.id);
+        console.log(res.data.user.id);
 
         navigate(`/profile/${res.data.user.id}`)
       }

@@ -1,29 +1,33 @@
+const config = require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'Amit@123',
-  database: 'registration_app',  
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_MAIN,  
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
 });
 
 const poolPhone = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'Amit@123',
-  database: 'phone_login',  
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_PHONE, 
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
 });
 
 const poolEmail = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'Amit@123',
-  database: 'email_login',  
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_EMAIL,
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
 });
