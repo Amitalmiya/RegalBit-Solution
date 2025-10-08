@@ -36,10 +36,10 @@ const userRegistration = async (req, res) => {
     const formattedDOB = new Date(dateOfBirth).toISOString().split("T")[0];
     const userTime = formatTimeToMySQL(timeFormat);
 
-    const [existing] = await pool.query(`SELECT * FROM users WHERE email = ? OR phone = ? OR userName = ?`, [email, phone, userName]) 
+    const [existing] = await pool.query(`SELECT * FROM users WHERE email = ? OR userName = ?`, [email, userName]) 
 
-    if (existing.length > 0 ) {
-      return res.status(400).json({message: "User already exists."})
+    if (existing.length > 0) {
+      return req.status(400).json({ message: "User already exists. "});
     }
 
     if (!userName || !email) {
@@ -254,20 +254,19 @@ const loginUser = async (req, res) => {
       return res.status(401).json({message: "Invalid username or password from database"})
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    // const isMatch = await bcrypt.compare(password, user.password_hash);
 
-    if (!isMatch) {
-      return res.status(401).json({message: "Invalid username or password"});
-    }
+    // if (!isMatch) {
+    //   return res.status(401).json({message: "Invalid username or password"});
+    // }
 
     const token = jwt.sign(
       {id: user.id,
         userName: user.userName,
-        email: user.email,
-        phone: user.phone,
+        password: user.password,
       },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' }
     )
     // if (user.password !== password) {
     //   return res.status(401).json({message: "Inavalid username or password"})
@@ -276,7 +275,7 @@ const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successfully",
       token,
-      user: { id: user.id, userName: user.userName, email: user.email, phone: user.phone },
+      user: { id: user.id, userName: user.userName, password: user.password},
     });
   } catch (err) {
     console.log(err);
@@ -314,6 +313,36 @@ const getUserProfile = async (req, res) => {
   }
 }
 
+const getUserFromToken = async (token) => {
+  try{
+    if(!token) {
+      return {success: false, message: "Token missing"};
+    }
+
+    const trimmedToken = token.replace(/^Bearer\s+/i, "").trim();
+    console.log("Recived Token: ", trimmedToken);
+
+    const decoded = jwt.verify(trimmedToken, JWT_SECRET);
+    console.log("Decoded Token:", decoded);
+
+    const [mainUsers] = await pool.query(`SELECT id, userName, email, phone FROM users WHERE id = ?`, [decoded.id]);
+
+    const [phoneUsers] = await poolPhone.query(`SELECT id, userName, phone FROM users WHERE id = ?`, [decoded.id]);
+
+    const [emailUsers] = await poolEmail.query(`SELECT id, userName, email FROM users WHERE id = ?`, [decoded.id]);
+
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0] || null;
+    
+    if(!user){
+      return {success: false, message: "User not found"}
+    }
+    return {success: true, user}
+  }catch (error) {
+    console.log("Token Verification error:", error.message);
+    return {success: false, message: "Invalid or expired token"}
+  }
+}
+
 module.exports = {
   userRegistration,
   loginUser,
@@ -323,4 +352,5 @@ module.exports = {
   updateUser,
   deleteUser,
   toggleUserStatus,
+  getUserFromToken, 
 };

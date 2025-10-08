@@ -1,59 +1,64 @@
-import React, { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { CgProfile } from "react-icons/cg";
 import { IoIosLogOut } from "react-icons/io";
-import axios from 'axios';
-
+import axios from "axios";
 
 const NavbarMain = () => {
-
   const navigate = useNavigate();
 
-    useEffect(()=> {
-        if (!localStorage.getItem("userToken")) {
-          navigate("/login")
-        }
-    }, [navigate])
-
-    const handleLogOut = () => {
-        const confirmLogOut = window.confirm("Are you sure logout!!");
-        if (confirmLogOut) {
-            localStorage.removeItem("userToken");
-            navigate("/login")
-        }
+  useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      navigate("/login");
     }
+  }, [navigate]);
 
-    const handleProfile = async (e) => {
-    const userId = localStorage.getItem("userToken");
+  const handleLogOut = () => {
+    const confirmLogOut = window.confirm("Are you sure logout!!");
+    if (confirmLogOut) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  };
+
+  const handleProfile = async (e) => {
+    const userId = localStorage.getItem("token");
     if (!userId) {
-      // console.log("no user token found");
+      // console.log("No user token found");
+      alert("You are not logged in.");
       return;
     }
     try {
-      const res = await axios.get(`http://localhost:5000/api/users/${userId}`)
-      console.log("User data", res.data);
+      const res = await axios.get(`http://localhost:5000/api/users/allusers`, {
+        headers: {
+          Authorization: `Bearer ${userId}`,
+        },
+      });
+      console.log("User data", res.data.user.id);
 
-      navigate(`/profile/${userId}`);
-    } catch(error) {
-      // console.log("Error fetching user data", error);
-      alert("Unable to fetch profile data");
+      navigate(`/profile/${res.data.user.id}`);
+    } catch (error) {
+      console.log("Error fetching user data", error);
+      // alert("Unable to fetch profile data");
     }
-  }
+  };
 
-    return (
+  return (
     <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
       <div className="flex space-x-4">
-        <Link to="/home" className="hover:bg-blue-700 px-3 py-2 rounded transition">
+        <Link
+          to="/home"
+          className="hover:bg-blue-700 px-3 py-2 rounded transition"
+        >
           Home
         </Link>
       </div>
       <div className="flex space-x-2">
-
         <button
-        onClick={handleProfile}
-        className="bg-red-700 hover:bg-red-400 px-3 py-2 rounded transition cursor-pointer hover:focus:ring-1 focus:ring-white"
+          onClick={handleProfile}
+          className="bg-red-700 hover:bg-red-400 px-3 py-2 rounded transition cursor-pointer hover:focus:ring-1 focus:ring-white"
         >
-        <CgProfile/>
+          <CgProfile />
         </button>
 
         <button

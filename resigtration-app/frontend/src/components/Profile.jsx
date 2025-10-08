@@ -11,25 +11,55 @@
 
     const [error, setError] = useState("");
 
+    // useEffect(() => {
+    //   const userId = localStorage.getItem("userToken");
+    //   if (!userId) {
+    //     setError("User not found. Please login.");
+    //     return;
+    //   }
+
+    //   const fetchUser = async () => {
+    //     try{
+    //       const res = await axios.get(`http://localhost:5000/api/users/profile`, {
+    //         headers: {
+    //           Authorization: `Bearer ${token}`
+    //         }
+    //       });
+    //       setUser(res.data.user || res.data || res.data.user?.id)
+
+    //     } catch (error) {
+    //       setError("Failed to fetch user data")
+    //     }
+    //   }
+    //   fetchUser();
+    // }, [id]);
+
     useEffect(() => {
-      const userId = localStorage.getItem("userToken") || id;
-      if (!userId) {
-        setError("User not found. Please login.");
-        return;
-      }
-
       const fetchUser = async () => {
-        try{
-          const res = await axios.get(`http://localhost:5000/api/users/${userId}`);
-          setUser(res.data.user || res.data)
-
-        } catch (error) {
-          console.log("API error: ", error.response?.data || error.message);
-          setError("Failed to fetch user data")
+        const token = localStorage.getItem("token");
+        if(!token) {
+          setError("User not logged in. Please login Again.");
+          navigate("/phone");
+          return;
         }
-      }
+
+        try {
+          const res = await axios.get(`http://localhost:5000/api/users/allusers`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setUser(res.data.user);
+          navigate(`/profile/${res.data.user.id}`);
+        } catch (error) {
+          // console.log("Error fetching Profile", error);
+          setError("Failed to fetch user data. plase login again.");
+          // localStorage.removeItem("token");
+        }
+      };
+
       fetchUser();
-    }, [id]);
+    }, [navigate]);
 
     if (error) return <p className="text-red-500 text-center py-10">{error}</p>;
 
@@ -107,6 +137,14 @@
               onClick={()=> navigate(`/edit/${id}`)}
             >
               Edit Profile
+            </button>
+            <button className="border rounded border-[1px] px-2 py-1 text-center bg-blue-500 hover:bg-blue-200 cursor-pointer"
+              onClick={ () => {
+                localStorage.removeItem("token");
+                navigate("/phone");
+              }}
+            >
+              Logout
             </button>
           </div>
         </div>

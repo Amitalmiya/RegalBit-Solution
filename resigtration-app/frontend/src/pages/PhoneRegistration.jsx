@@ -83,24 +83,16 @@ const handleVerifyOtp = async (e) => {
       }
     );
 
-    console.log("Login with Phone Response");
-
-    if (res.status === 200 || res.status === 201) {
-      alert("Data submitted sucessfully!!");
-    }
+    console.log("Login with Phone Response", res.data);
 
     const userId = res.data.user.id;
-    
-    if (!userId) {
-      console.error("User ID missing in response:", res.data.user?.id);
-      setError("User verification failed");
-      return;
-    }
 
-    localStorage.setItem("userToken", userId);
+    localStorage.setItem("token", userId);
+    // if (!userId) {
+    //   setError("Token missing. Verification failed.");
+    // }
 
     setIsVerified(true);
-
     navigate(`/profile/${userId}`);
 
     alert("Registration Successful! Redirecting to profile...");

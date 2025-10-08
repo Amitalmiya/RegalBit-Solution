@@ -51,15 +51,15 @@ const EmailRegistration = () => {
     setError("");
 
     try {
-      const existingUsers = await axios.get("http://localhost:5000/api/users");
-      const emailExist = existingUsers.data.some(
-        (u) => u.email.toLowerCase() === email.toLowerCase()
-      );
+      // const existingUsers = await axios.get("http://localhost:5000/api/users/allusers");
+      // const emailExist = existingUsers.data.some(
+      //   (u) => u.email.toLowerCase() === email.toLowerCase()
+      // );
 
-      if (emailExist) {
-        setError("Email already exists.please login or use a different email.")
-        return;
-      }
+      // if (emailExist) {
+      //   setError("Email already exists.please login or use a different email.")
+      //   return;
+      // }
       
       const res = await axios.post(
         "http://localhost:5000/api/auth/signup/requestemail-otp",
@@ -88,13 +88,13 @@ const EmailRegistration = () => {
       );
       alert(res.data.message);
 
-      localStorage.setItem("userToken", res.data.token || "dummyToken");
+      localStorage.setItem("token", res.data.token);
 
-      localStorage.setItem("userId", res.data.user?.id || ""); 
+      localStorage.setItem("userId", res.data.user.id); 
 
       setIsVerified(true);
 
-      navigate("/profile");
+      navigate(`/profile/${res.data.user.id}`);
     } catch (error) {
       alert(error.response?.data?.message || "OTP verification failed");
       if (error.response?.data?.error?.includes("Try again in")) {

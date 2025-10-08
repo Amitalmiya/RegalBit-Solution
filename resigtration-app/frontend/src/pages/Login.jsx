@@ -26,17 +26,21 @@ const Login = () => {
     try {
       const res = await axios.post(
         `http://localhost:5000/api/users/login`, {
-          userName: userName,
+          userName,
           password,
         });
+      console.log(res);
       if (res.status === 200 || res.status === 201) {
+        const userId = res.data.user.id;
+        localStorage.setItem("token", userId)
         setSuccess('Login Successfully');
         alert('Login successfully!!')
 
-        localStorage.setItem("userToken", res.data.user.id);
-        console.log(res.data.user.id);
+        // const token = res.data.token;
+        // localStorage.setItem("token", token);
+        // localStorage.setItem("userData", JSON.stringify(res.data.user));
 
-        navigate(`/profile/${res.data.user.id}`)
+        navigate(`/profile/${userId}`)
       }
     } catch (err) {
       setError( err.response?.data?.message || "Server error. Please try again later.");

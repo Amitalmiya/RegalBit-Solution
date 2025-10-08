@@ -190,8 +190,14 @@ const RegistrationForm = () => {
 
   if (!validateForm()) return;
 
+  
   try {
-    const res = await axios.post("http://localhost:5000/api/users", form);
+    const res = await axios.post("http://localhost:5000/api/users/", form, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const token = res.data.user?.id;
 
     console.log("Registration Response:", res.data);
 

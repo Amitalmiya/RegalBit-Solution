@@ -14,7 +14,7 @@ import Profile from "./components/Profile";
 import ProtectedRoute from "./utils/ProtectedRoute";
 
 function App() {
-  const isLoggedIn = localStorage.getItem("userToken");
+  const isLoggedIn = localStorage.getItem("token");
 
   return (
     <>

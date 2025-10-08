@@ -1,8 +1,8 @@
 const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET || 'Amit@123$'
+const JWT_SECRET = process.env.JWT_SECRET || "Amit@123$";
 
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -136,29 +136,20 @@ const verifyPhoneOtp = async (req, res) => {
       [userName, phone, passwordHash]
     );
 
-
     const token = jwt.sign(
       {
-        id: result.insertId,
-        userName,
-        phone
-       },
-       { expiresIn: '7d'}
+        id: user.id,
+        userName: user.userName,
+        phone: user.phone,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
     );
-    // req.session.user = {
-    //   id: result.insertId,
-    //   userName,
-    //   phone,
-    //   message: "OTP verify Seccssfully!!",
-    // };
-    res.status(201).json({ 
+
+    res.status(201).json({
       message: "User created and logged in with phone successfully",
       token,
-      user: { id:result.insertId,
-        userName,
-        phone
-       } 
-    
+      user: { id: user.id, userName: user.userName, phone: user.phone },
     });
   } catch (err) {
     console.error(err);
@@ -301,9 +292,9 @@ const verifyEmailOtp = async (req, res) => {
 
     const token = jwt.sign(
       {
-        id: result.insertId, 
+        id: result.insertId,
         userName,
-        email: contact
+        email: contact,
       },
       JWT_SECRET,
       { expiresIn: "7d" }
@@ -315,13 +306,10 @@ const verifyEmailOtp = async (req, res) => {
     //   email: contact,
     //   phone: null,
     // };
-    res.json({ 
+    res.json({
       message: "User created and logged in with email successfully",
       token,
-      user: { id: result.insertId,
-        userName, 
-        email: contact
-      }
+      user: { id: result.insertId, userName, email: contact },
     });
   } catch (err) {
     console.error(err);

@@ -1,19 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-
 const authenticateToken = require('../middleware/userMiddleware');
 
 const { loginUser, userRegistration, allUsers, getUserById, updateUser, deleteUser, toggleUserStatus, getUserProfile } = require("../controllers/userController");
 
-router.post("/registration", userRegistration);
+router.post("/", userRegistration);
+
 router.post("/login", loginUser)
 
+router.get("/profile/:id", authenticateToken, getUserProfile);
 
-
-router.get("/profile/:id", authenticateToken, getUserProfile)
-
-router.get("/users", allUsers);
+router.get("/allusers", allUsers);
 
 router.put("/update/:id", authenticateToken, updateUser);
 
