@@ -192,12 +192,7 @@ const RegistrationForm = () => {
 
   
   try {
-    const res = await axios.post("http://localhost:5000/api/users/", form, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const token = res.data.user?.id;
+    const res = await axios.post("http://localhost:5000/api/users", form);
 
     console.log("Registration Response:", res.data);
 
@@ -205,14 +200,14 @@ const RegistrationForm = () => {
       alert("Data submitted successfully");
       setForm(initialForm);
 
-      const userId = res.data.id || res.data.user?.id;
-      if (!userId) {
+      const token = res.data.token || res.data.user?.id;
+      if (!token) {
         console.error("User ID not found in response!");
         return;
       }
-      localStorage.setItem("userToken", userId);
+      localStorage.setItem("token", token);
 
-      navigate(`/profile/${userId}`);
+      navigate(`/profile/${token}`);
     } else {
       alert("Something went wrong");
     }

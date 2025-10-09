@@ -22,24 +22,22 @@ const NavbarMain = () => {
   };
 
   const handleProfile = async (e) => {
-    const userId = localStorage.getItem("token");
-    if (!userId) {
-      // console.log("No user token found");
-      alert("You are not logged in.");
-      return;
-    }
     try {
-      const res = await axios.get(`http://localhost:5000/api/users/allusers`, {
-        headers: {
-          Authorization: `Bearer ${userId}`,
-        },
-      });
-      console.log("User data", res.data.user.id);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You are not logged in token not found.");
+        return;
+      }
 
-      navigate(`/profile/${res.data.user.id}`);
+      const res = await axios.get(`http://localhost:5000/api/users/profile`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      navigate(`/profile/${token}`);
     } catch (error) {
       console.log("Error fetching user data", error);
-      // alert("Unable to fetch profile data");
+      alert("Unable to fetch profile data");
     }
   };
 

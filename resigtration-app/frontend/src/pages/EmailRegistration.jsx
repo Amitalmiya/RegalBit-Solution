@@ -51,16 +51,6 @@ const EmailRegistration = () => {
     setError("");
 
     try {
-      // const existingUsers = await axios.get("http://localhost:5000/api/users/allusers");
-      // const emailExist = existingUsers.data.some(
-      //   (u) => u.email.toLowerCase() === email.toLowerCase()
-      // );
-
-      // if (emailExist) {
-      //   setError("Email already exists.please login or use a different email.")
-      //   return;
-      // }
-      
       const res = await axios.post(
         "http://localhost:5000/api/auth/signup/requestemail-otp",
         { userName, email, password }
@@ -74,29 +64,24 @@ const EmailRegistration = () => {
     }
   };
 
-  const handleOtpVerify = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/signup/verifyemail-otp",
-        {
-          userName,
-          email,
-          password,
-          otp: enteredOtp,
-        }
-      );
-      alert(res.data.message);
+const handleOtpVerify = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/signup/verifyemail-otp",
+      { email, userName, password, otp: enteredOtp }
+    );
 
-      localStorage.setItem("token", res.data.token);
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      localStorage.setItem("userId", res.data.user.id); 
+    setIsVerified(true);
 
-      setIsVerified(true);
+    const userId = res.data.token.id;
+    navigate(`/profile/${userId}`);
 
-      navigate(`/profile/${res.data.user.id}`);
-    } catch (error) {
-      alert(error.response?.data?.message || "OTP verification failed");
+  } catch (error) {
+    alert(error.response?.data?.error || "OTP verification failed");
       if (error.response?.data?.error?.includes("Try again in")) {
         const match = error.response.data.error.match(/(\d+)/);
         if (match) {

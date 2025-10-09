@@ -39,7 +39,7 @@ const userRegistration = async (req, res) => {
     const [existing] = await pool.query(`SELECT * FROM users WHERE email = ? OR userName = ?`, [email, userName]) 
 
     if (existing.length > 0) {
-      return req.status(400).json({ message: "User already exists. "});
+      return res.status(400).json({ message: "User already exists. "});
     }
 
     if (!userName || !email) {
@@ -74,7 +74,7 @@ const userRegistration = async (req, res) => {
     const token = jwt.sign(
       { id: result.insertId, userName, email, phone },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' }
     )
 
     res.status(201).json({
@@ -285,19 +285,20 @@ const loginUser = async (req, res) => {
 
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.params.id;
+
+    const userId = req.user.id;
 
     if(req.user.id != userId) {
       return res.status(403).json({message: "Unauthorized access"});
     }
 
-    const [mainUsers] = await pool.query(`SELECT id, userName, email, phone FROM users WHERE id = ?`, [userId]);
-
+    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE id = ?`, [userId]);
+ 
     const [phoneUsers] = await poolPhone.query(`SELECT id, userName, phone FROM users WHERE id = ?`, [userId]);
 
     const [emailUsers] = await poolEmail.query(`SELECT id, userName, email FROM users WHERE id = ?`, [userId]);
 
-    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0] || null;
     
     if(!user) {
       return res.status(404).json({message: "User not found"});
@@ -308,10 +309,11 @@ const getUserProfile = async (req, res) => {
      user,
     })
   } catch(error) {
-    console.log(error);
+    console.error("getUserProfile Error:", error);
     res.status(500).json({message: "Server Error"})
   }
 }
+
 
 const getUserFromToken = async (token) => {
   try{

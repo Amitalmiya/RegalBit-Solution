@@ -1,7 +1,6 @@
-const { pool, poolPhone, poolEmail } = require("../config/db");
+const { poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const JWT_SECRET = process.env.JWT_SECRET || "Amit@123$";
 
 function generateOtp() {
@@ -40,6 +39,9 @@ const requestPhoneOtp = async (req, res) => {
     res.status(500).json({ error: "Server Error" });
   }
 };
+
+
+
 
 const verifyPhoneOtp = async (req, res) => {
   try {
@@ -121,13 +123,12 @@ const verifyPhoneOtp = async (req, res) => {
         `UPDATE users SET failed_attempts=0, blocked_until=NULL WHERE phone=?`,
         [phone]
       );
+      return res.status(400).json({ error: "User already exists" });
     }
 
     await poolPhone.query("UPDATE otps SET is_verified=1 WHERE id=?", [
       otpRecord.id,
     ]);
-
-    if (user) return res.status(400).json({ error: "User already exists" });
 
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -136,11 +137,12 @@ const verifyPhoneOtp = async (req, res) => {
       [userName, phone, passwordHash]
     );
 
+    // ✅ FIXED JWT part
     const token = jwt.sign(
       {
-        id: user.id,
-        userName: user.userName,
-        phone: user.phone,
+        id: result.insertId,
+        userName,
+        phone,
       },
       JWT_SECRET,
       { expiresIn: "7d" }
@@ -149,13 +151,14 @@ const verifyPhoneOtp = async (req, res) => {
     res.status(201).json({
       message: "User created and logged in with phone successfully",
       token,
-      user: { id: user.id, userName: user.userName, phone: user.phone },
+      user: { id: result.insertId, userName, phone },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server Error" });
   }
 };
+
 
 const requestEmailOtp = async (req, res) => {
   try {
@@ -199,11 +202,11 @@ const verifyEmailOtp = async (req, res) => {
     if (!email || !otp)
       return res.status(400).json({ error: "Email and OTP required" });
 
-    const contact = email.toLowerCase();
+    const emailLower = email.toLowerCase();
 
     const [otpRows] = await poolEmail.query(
       `SELECT * FROM otps WHERE contact=? AND purpose='signup' AND is_verified=0 ORDER BY created_at DESC LIMIT 1`,
-      [contact]
+      [emailLower]
     );
     if (!otpRows.length) return res.status(400).json({ error: "No OTP found" });
 
@@ -214,102 +217,86 @@ const verifyEmailOtp = async (req, res) => {
 
     const [users] = await poolEmail.query(
       `SELECT * FROM users WHERE email = ? LIMIT 1`,
-      [contact]
+      [emailLower]
     );
 
     const user = users[0];
 
-    if (user?.permanently_blocked) {
+    if (user?.permanently_blocked)
       return res
         .status(403)
         .json({ error: "Account permanently blocked. Contact admin." });
-    }
 
     if (user?.blocked_until && new Date(user.blocked_until) > new Date()) {
       const minutesLeft = Math.ceil(
         (new Date(user.blocked_until) - new Date()) / 60000
       );
-      return res
-        .status(403)
-        .json({ error: `Try again in ${minutesLeft} minutes` });
+      return res.status(403).json({ error: `Try again in ${minutesLeft} minutes` });
     }
 
     if (String(otpRecord.otp) !== String(otp)) {
       let failedAttempts = (user?.failed_attempts || 0) + 1;
-
       let blockTime = 0;
 
       if (failedAttempts === 2) blockTime = 2;
       if (failedAttempts === 3) blockTime = 4;
       if (failedAttempts === 4) blockTime = 8;
       if (failedAttempts >= 6) {
-        await poolEmail.query(
-          `UPDATE users SET permanently_blocked=1 WHERE email=?`,
-          [contact]
-        );
-        return res
-          .status(403)
-          .json({ error: "Account permanently blocked. Contact admin." });
+        await poolEmail.query(`UPDATE users SET permanently_blocked=1 WHERE email=?`, [emailLower]);
+        return res.status(403).json({ error: "Account permanently blocked. Contact admin." });
       }
 
-      const blockedUntil = blockTime
-        ? new Date(Date.now() + blockTime * 60 * 1000)
-        : null;
+      const blockedUntil = blockTime ? new Date(Date.now() + blockTime * 60 * 1000) : null;
 
-      if (user) {
+      if (user)
         await poolEmail.query(
           `UPDATE users SET failed_attempts=?, blocked_until=? WHERE email=?`,
-          [failedAttempts, blockedUntil, contact]
+          [failedAttempts, blockedUntil, emailLower]
         );
-      }
 
       return res.status(400).json({
-        error: blockTime
-          ? `Wrong OTP. Try again in ${blockTime} minutes`
-          : "Invalid OTP",
+        error: blockTime ? `Wrong OTP. Try again in ${blockTime} minutes` : "Invalid OTP",
       });
     }
 
     if (user) {
       await poolEmail.query(
         `UPDATE users SET failed_attempts=0, blocked_until=NULL WHERE email=?`,
-        [contact]
+        [emailLower]
       );
+
+      const token = jwt.sign(
+        { id: user.id, userName: user.userName, email: user.email },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.json({
+        message: "User logged in successfully",
+        token,
+        user: { id: user.id, userName: user.userName, email: user.email },
+      });
     }
 
-    await poolEmail.query("UPDATE otps SET is_verified=1 WHERE id=?", [
-      otpRecord.id,
-    ]);
-
-    if (user) return res.status(400).json({ error: "User already exists" });
+    await poolEmail.query("UPDATE otps SET is_verified=1 WHERE id=?", [otpRecord.id]);
 
     const passwordHash = await bcrypt.hash(password, 10);
 
     const [result] = await poolEmail.query(
       `INSERT INTO users (userName, email, password_hash) VALUES (?, ?, ?)`,
-      [userName, contact, passwordHash]
+      [userName, emailLower, passwordHash]
     );
 
     const token = jwt.sign(
-      {
-        id: result.insertId,
-        userName,
-        email: contact,
-      },
+      { id: result.insertId, userName, email: emailLower },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // req.session.user = {
-    //   id: result.insertId,
-    //   userName,
-    //   email: contact,
-    //   phone: null,
-    // };
     res.json({
       message: "User created and logged in with email successfully",
       token,
-      user: { id: result.insertId, userName, email: contact },
+      user: { id: result.insertId, userName, email: emailLower },
     });
   } catch (err) {
     console.error(err);
