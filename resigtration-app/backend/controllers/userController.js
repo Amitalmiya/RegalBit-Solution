@@ -31,6 +31,7 @@ const userRegistration = async (req, res) => {
       timeFormat,
       hexaDecimalColorCode,
       password,
+      role,
     } = req.body;
 
     const formattedDOB = new Date(dateOfBirth).toISOString().split("T")[0];
@@ -50,8 +51,8 @@ const userRegistration = async (req, res) => {
 
     const [result] = await pool.query(
       `INSERT INTO users
-      (userName, email, phone, dateOfBirth, socialSecurityNo, driverLicense, gender, bloodGroup, zipCode, websiteUrl, creditCardNo, timeFormat, hexaDecimalColorCode,password, password_hash)
-      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (userName, email, phone, dateOfBirth, socialSecurityNo, driverLicense, gender, bloodGroup, zipCode, websiteUrl, creditCardNo, timeFormat, hexaDecimalColorCode,password, password_hash, role)
+      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userName,
         email,
@@ -68,6 +69,7 @@ const userRegistration = async (req, res) => {
         hexaDecimalColorCode,
         password,
         password_hash,
+        role,
       ]
     );
 
@@ -236,16 +238,16 @@ const loginUser = async (req, res) => {
   }
 
     const [mainUsers] = await pool.query(`SELECT * FROM users WHERE userName = ?`, [
-      userName,
+      userName
     ]);
     
     const [phoneUsers] = await poolPhone.query(`SELECT * FROM users WHERE userName = ?`, [
-      userName,
+      userName
     ]);
 
 
     const [emailUsers] = await poolEmail.query(`SELECT * FROM users WHERE userName = ?`, [
-      userName,
+      userName
     ]);
 
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0] || null;
@@ -254,16 +256,16 @@ const loginUser = async (req, res) => {
       return res.status(401).json({message: "Invalid username or password from database"})
     }
 
-    // const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await bcrypt.compare(password, user.password_hash);
 
-    // if (!isMatch) {
-    //   return res.status(401).json({message: "Invalid username or password"});
-    // }
+    if (!isMatch) {
+      return res.status(401).json({message: "Invalid username or password"});
+    }
 
     const token = jwt.sign(
       {id: user.id,
         userName: user.userName,
-        password: user.password,
+        role: user.role || "user"
       },
       JWT_SECRET,
       { expiresIn: '1h' }
@@ -275,7 +277,7 @@ const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successfully",
       token,
-      user: { id: user.id, userName: user.userName, password: user.password},
+      user: { id: user.id, userName: user.userName, role: user.role || "user",},
     });
   } catch (err) {
     console.log(err);

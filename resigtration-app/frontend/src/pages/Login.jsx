@@ -3,16 +3,13 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  
   const [userName, setUsername] = useState("");
-
   const [password, setPassword] = useState("");
-
+  const [role, setRole] = useState("user");
   const [error, setError] = useState("");
-
   const [success, setSuccess] = useState("");
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,40 +20,68 @@ const Login = () => {
       setError("All fields are required");
       return;
     }
+
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/users/login`, {
-          userName,
-          password,
-        });
-      console.log(res);
+      const res = await axios.post("http://localhost:5000/api/users/login", {
+        userName,
+        password,
+      });
+
       if (res.status === 200 || res.status === 201) {
+        const token = res.data.token;
         const userId = res.data.user.id;
-        localStorage.setItem("token", userId)
-        setSuccess('Login Successfully');
-        alert('Login successfully!!')
 
-        // const token = res.data.token;
-        // localStorage.setItem("token", token);
-        // localStorage.setItem("userData", JSON.stringify(res.data.user));
+        localStorage.setItem("token", token);
+        localStorage.setItem("role", res.data.user.role);
+        setSuccess("Login Successfully");
+        alert("Login successfully!!");
 
-        navigate(`/profile/${userId}`)
+        if (res.data.user.role === "superadmin" || res.data.user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate(`/profile/${userId}`);
+        }
       }
     } catch (err) {
-      setError( err.response?.data?.message || "Server error. Please try again later.");
+      setError(err.response?.data?.message || "Server error. Please try again later.");
       console.log(err);
     }
   };
 
   return (
-    <div className="flex item-center justify-center w-full min-h bg-full bg-gray-100 py-20">
+    <div className="flex items-center justify-center w-full min-h-screen bg-gray-100 py-20">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
         <h2 className="text-2xl text-center font-bold underline">Login</h2>
-        <form action="" className="py-10" onSubmit={handleSubmit}>
+
+        <form className="py-10" onSubmit={handleSubmit}>
+          <div className="mb-3 ">
+            <label className="italic">Login as:</label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="role"
+                  value="user"
+                  checked={role === "user"}
+                  onChange={() => setRole("user")}
+                />
+                User
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="role"
+                  value="admin"
+                  checked={role === "admin"}
+                  onChange={() => setRole("admin")}
+                />
+                Admin
+              </label>
+            </div>
+          </div>
+          {/* Username */}
           <div className="mb-3">
-            <label htmlFor="" className="italic">
-              Username :
-            </label>
+            <label className="italic">Username :</label>
             <input
               type="text"
               placeholder="Enter your username"
@@ -65,51 +90,38 @@ const Login = () => {
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            {error && <p className="text-red-500 italic mt-1">{error}</p>}
-            {success && <p className="text-red-500 italic mt-1">{success}</p>}
-
           </div>
-          <div className="mb-5">
-            <label htmlFor="" className="italic">
-              Password :
-            </label>
+
+          <div className="mb-3">
+            <label className="italic">Password :</label>
             <input
               type="password"
-              placeholder="password"
+              placeholder="Enter your password"
               value={password}
-              onChange={(e)=> setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
               required
             />
-          </div>
-          {error && <p className="text-red-500 italic mb-3">{error}</p>}
-          {/* {success && <p className="text-green-600 italic mb-3">{success}</p>} */}
-          <div className="mb-2">
-            <button
-              type="submit"
-              className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
-            >
-              Login
-            </button>
-          </div>
+          </div>    
 
-          <div className="mb-3 text-center space-y-2">
-            <Link
-              to="/"
-              className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
-            >
+          {error && <p className="text-red-500 italic mb-3">{error}</p>}
+          {success && <p className="text-green-600 italic mb-3">{success}</p>}
+
+          <button
+            type="submit"
+            className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
+          >
+            Login
+          </button>
+
+          <div className="mt-4 text-center space-y-2">
+            <Link to="/" className="underline text-sm text-blue-800 italic block hover:text-red-500">
               Register Yourself
             </Link>
-            <Link
-              to="/email"
-              className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
-            >
+            <Link to="/email" className="underline text-sm text-blue-800 italic block hover:text-red-500">
               Login with Email
             </Link>
-            <Link
-              to="/phone"
-              className="mt-3 italic text-sm block text-blue-800 w-full py-1 cursor:pointer underline hover:text-red-500"
-            >
+            <Link to="/phone" className="underline text-sm text-blue-800 italic block hover:text-red-500">
               Login with (+91 IND)Phone Number
             </Link>
           </div>

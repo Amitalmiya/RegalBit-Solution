@@ -32,7 +32,7 @@ const Profile = () => {
         setUser(res.data.user);
         navigate(`/profile/${res.data.user.id}`);
       } catch (error) {
-        // console.log("Error fetching Profile", error);
+        console.log("Error fetching Profile", error);
         setError("Failed to fetch user data. plase login again." || error.res?.data.message);
         // localStorage.removeItem("token");
       }
@@ -49,15 +49,20 @@ const Profile = () => {
     <div className="flex justify-center py-20 bg-gray-100 min-h-screen">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-300">
         <h2 className="text-2xl font-bold text-center underline mb-6">
-          Your Profile
+          {user.userName} Profile
         </h2>
         <div className="space-y-3 mb-10">
+          { user.userName && (
           <p>
             <strong>Username:</strong> {user.userName}
           </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
+          )}
+          {user.email && (
+            <p>
+              <strong>Email:</strong> {user.email}
+            </p>
+          )}
+
           {user.phone && (
             <p>
               <strong>Phone:</strong> {user.phone}
@@ -127,9 +132,6 @@ const Profile = () => {
             }}
           >
             Logout
-          </button>
-          <button className="border rounded border-[1px] px-2 py-1 text-center bg-blue-500 hover:bg-blue-200 cursor-pointer">
-            Delete Profile
           </button>
         </div>
       </div>

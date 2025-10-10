@@ -12,6 +12,8 @@ import NavbarMain from "./components/NavbarMain";
 import Home from "./components/Home";
 import Profile from "./components/Profile";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import AdminDashboard from "./components/AdminDashboard";
+import SuperAdminDashboard from "./components/SuperAdminDashboard";
 
 function App() {
   const isLoggedIn = localStorage.getItem("token");
@@ -44,6 +46,21 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/admin-dashboard"
+          element= {
+              <AdminDashboard />
+              // <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+              // </ProtectedRoute>
+          }
+          />
+          <Route 
+          path="/superadmin-dashboard"
+          element = {
+            // <ProtectedRoute allowedRoles={["superadmin"]}>
+              <SuperAdminDashboard />
+            // </ProtectedRoute>
+          }
+          /> 
         </Routes>
       </BrowserRouter>
     </>

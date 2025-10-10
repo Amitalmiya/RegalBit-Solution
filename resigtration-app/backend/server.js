@@ -6,7 +6,8 @@ const session = require('express-session')
 const {pool, poolPhone, poolEmail} = require('./config/db')
 
 const usersRoutes = require('./routes/userRoutes');
-const otpRoutes = require('./routes/authRouter')
+const otpRoutes = require('./routes/authRouter');
+const createDefaultSuperAdmin = require('./utils/createDefaultSuperAdmin');
 
 const app = express();
 
@@ -37,6 +38,8 @@ app.use('/api/auth', otpRoutes);
 
 async function initDB() {
     try {
+        await createDefaultSuperAdmin(pool, poolPhone, poolEmail);
+
         await pool.query('SELECT 1 AS result');
         console.log('Mysql connected Successfully');
 
