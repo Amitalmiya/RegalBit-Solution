@@ -38,16 +38,28 @@ app.use('/api/auth', otpRoutes);
 
 async function initDB() {
     try {
-        await createDefaultSuperAdmin(pool, poolPhone, poolEmail);
+        await createDefaultSuperAdmin();
+        console.log('Superadmin intialization complete');
 
-        await pool.query('SELECT 1 AS result');
-        console.log('Mysql connected Successfully');
+        const dbs = [
+            { pool: pool, name: "Main"},
+            { pool: poolPhone, name : "Phone"},
+            { pool: poolEmail, name: "Email" },
+        ];
 
-        await poolPhone.query('SELECT 1 result');
-        console.log('MySql connected Successfully');
+        for(const{pool, name} of dbs) {
+            await pool.query('SELECT 1 AS result');
+            console.log(`Mysql connected Successfully (${name}) DB`);
+        }
 
-        await poolEmail.query('SELECT 1 result');
-        console.log('MySql connected Successfully');
+        // await pool.query('SELECT 1 AS result');
+        // console.log('Mysql connected Successfully');
+
+        // await poolPhone.query('SELECT 1 result');
+        // console.log('MySql connected Successfully');
+
+        // await poolEmail.query('SELECT 1 result');
+        // console.log('MySql connected Successfully');
 
         app.listen(PORT, ()=> {
             console.log(`Server runnning at http://localhost:${PORT}`);
@@ -57,6 +69,5 @@ async function initDB() {
         process.exit(1);
     }
 }
-
 initDB();
 

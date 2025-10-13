@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 const Login = () => {
   const [userName, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -37,7 +36,7 @@ const Login = () => {
         alert("Login successfully!!");
 
         if (res.data.user.role === "superadmin" || res.data.user.role === "admin") {
-          navigate("/admin-dashboard");
+          navigate("/dashboard");
         } else {
           navigate(`/profile/${userId}`);
         }
@@ -54,32 +53,7 @@ const Login = () => {
         <h2 className="text-2xl text-center font-bold underline">Login</h2>
 
         <form className="py-10" onSubmit={handleSubmit}>
-          <div className="mb-3 ">
-            <label className="italic">Login as:</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="role"
-                  value="user"
-                  checked={role === "user"}
-                  onChange={() => setRole("user")}
-                />
-                User
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="role"
-                  value="admin"
-                  checked={role === "admin"}
-                  onChange={() => setRole("admin")}
-                />
-                Admin
-              </label>
-            </div>
-          </div>
-          {/* Username */}
+      
           <div className="mb-3">
             <label className="italic">Username :</label>
             <input

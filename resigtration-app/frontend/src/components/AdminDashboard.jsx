@@ -6,21 +6,18 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const role = localStorage.getItem("role"); // 'admin' or 'superadmin'
+  const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
 
-  // Fetch users
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/users/allusers/", {
+      const res = await axios.get("http://localhost:5000/api/users/allusers", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data || []);
     } catch (error) {
       console.log(error);
-    } finally {
-      setLoading(false);
     }
   }, [token]);
 
@@ -28,7 +25,6 @@ const AdminDashboard = () => {
     fetchUser();
   }, [fetchUser]);
 
-  // Toggle user status (active/inactive)
   const toggleUserStatus = async (id) => {
     try {
       await axios.patch(

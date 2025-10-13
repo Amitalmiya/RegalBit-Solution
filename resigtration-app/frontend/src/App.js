@@ -12,7 +12,7 @@ import NavbarMain from "./components/NavbarMain";
 import Home from "./components/Home";
 import Profile from "./components/Profile";
 import ProtectedRoute from "./utils/ProtectedRoute";
-import AdminDashboard from "./components/AdminDashboard";
+import Dashboard from "./components/Dashboard";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
 
 function App() {
@@ -46,9 +46,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/admin-dashboard"
+          <Route path="/dashboard"
           element= {
-              <AdminDashboard />
+              <Dashboard />
               // <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
               // </ProtectedRoute>
           }

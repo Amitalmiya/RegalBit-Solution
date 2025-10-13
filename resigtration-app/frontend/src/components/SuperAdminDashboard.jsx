@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useCallback, useEffect, useState } from "react";
-import { Trash2, UserCheck, UserX } from "lucide-react";
+import {Trash2, UserCheck, UserX } from "lucide-react";
 
 const SuperAdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -12,17 +12,17 @@ const SuperAdminDashboard = () => {
     password: "",
     role: "admin",
   });
-
+  
   const token = localStorage.getItem("token");
-//   const role = localStorage.getItem("role");
+  // const role = localStorage.getItem("role");
 
   // if (!token) {
-  //     return <Navigate to='/login' replace />
+  //     return <Link to='/login' replace />
   // }
 
   // if (role !== 'superadmin') {
   //     alert("Access Denied: SuperAdmin Only");
-  //     return  <Navigate to="/admin-dashboard" replace />
+  //     return  <Link to="/admin-dashboard" replace />
   // }
 
   const fetchUsers = useCallback(async () => {
@@ -101,7 +101,7 @@ const SuperAdminDashboard = () => {
   };
 
   return (
-        <div className="p-6">
+      <div className="p-6">
       <h2 className="text-center text-2xl font-bold mb-4">SuperAdmin Dashboard</h2>
       <div className="mb-6 p-4 bg-gray-50 rounded shadow">
         <h3 className="text-lg font-semibold mb-2">Create Admin / SuperAdmin</h3>

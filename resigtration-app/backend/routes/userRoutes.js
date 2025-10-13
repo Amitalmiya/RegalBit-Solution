@@ -2,25 +2,37 @@ const express = require("express");
 const router = express.Router();
 
 const authenticateToken = require('../middleware/userMiddleware');
+const { isAdmin, isSuperAdmin, isAdminOrSuperAdmin } = require('../middleware/roleMiddleware');
 
-const { loginUser, userRegistration, allUsers, getUserById, updateUser, deleteUser, toggleUserStatus, getUserProfile } = require("../controllers/userController");
+const {
+  loginUser,
+  userRegistration,
+  allUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  toggleUserStatus,
+  getUserProfile
+} = require("../controllers/userController");
 
-const {verifyToken, isAdmin, isSuperAdmin} = require('../middleware/roleMiddleware')
 
 router.post("/", userRegistration);
+router.post("/login", loginUser);
 
-router.post("/login", loginUser)
 
 router.get("/profile/:id", authenticateToken, getUserProfile);
-
-router.get("/allusers", verifyToken, isAdmin, allUsers);
-
 router.put("/update/:id", authenticateToken, updateUser);
+router.get("/:id", authenticateToken, getUserById);
 
-router.delete("/delete/:id",authenticateToken, verifyToken, isSuperAdmin, deleteUser)
 
-router.get("/:id",authenticateToken, getUserById);
+router.get("/allusers", authenticateToken, isAdminOrSuperAdmin, allUsers);
+router.patch("/toggle-status/:id/status", authenticateToken, isAdminOrSuperAdmin, toggleUserStatus);
 
-router.patch("/toggle-status/:id/status", toggleUserStatus);
+
+router.delete("/delete/:id", authenticateToken, isSuperAdmin, deleteUser);
+router.get("/superadmin-dashboard", authenticateToken, isSuperAdmin);
+
+
+router.get("/admin-dashboard", authenticateToken, isAdminOrSuperAdmin);
 
 module.exports = router;

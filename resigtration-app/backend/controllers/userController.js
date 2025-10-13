@@ -37,6 +37,8 @@ const userRegistration = async (req, res) => {
     const formattedDOB = new Date(dateOfBirth).toISOString().split("T")[0];
     const userTime = formatTimeToMySQL(timeFormat);
 
+    const userRole = role && role.trim() ? role : "user";
+
     const [existing] = await pool.query(`SELECT * FROM users WHERE email = ? OR userName = ?`, [email, userName]) 
 
     if (existing.length > 0) {
@@ -69,9 +71,10 @@ const userRegistration = async (req, res) => {
         hexaDecimalColorCode,
         password,
         password_hash,
-        role,
+        userRole,
       ]
     );
+
 
     const token = jwt.sign(
       { id: result.insertId, userName, email, phone },
@@ -96,14 +99,17 @@ const userRegistration = async (req, res) => {
 const allUsers = async (req, res) => {
   try {
 
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+      return res.status(403).json({message: "Access denied"});
+    }
+
     const [mainUsers] = await pool.query("SELECT * FROM users");
 
     const [ phoneUsers ] = await poolPhone.query(`SELECT * FROM users`);
 
     const [ emailUsers ] = await poolEmail.query(`SELECT * FROM users`);
 
-    const allUsers = [...mainUsers, ...phoneUsers, ...emailUsers]; 
-
+    const allUsers = [...mainUsers, ...phoneUsers, ...emailUsers]
     res.status(200).json({
       message : "All users fetched successfully",
       totalUsers: allUsers.length,
@@ -250,7 +256,7 @@ const loginUser = async (req, res) => {
       userName
     ]);
 
-    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0] || null;
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
 
     if(!user){
       return res.status(401).json({message: "Invalid username or password from database"})
@@ -270,9 +276,6 @@ const loginUser = async (req, res) => {
       JWT_SECRET,
       { expiresIn: '1h' }
     )
-    // if (user.password !== password) {
-    //   return res.status(401).json({message: "Inavalid username or password"})
-    // }
  
     res.status(200).json({
       message: "Login successfully",

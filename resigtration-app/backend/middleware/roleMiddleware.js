@@ -22,14 +22,24 @@ const verifyToken = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-    if (req.user.role === 'admin' || req.user.role === 'superadmin') next();
-    else res.status(403).json({ message: "Admin access required"});
+    if (req.user.role === 'admin' || req.user.role === 'superadmin') {
+    return next();
+    }
+    return res.status(403).json({ message: "Admin/SuperAdmin access only"});
 };
 
 const isSuperAdmin = (req, res, next) => {
-    if(req.user.role === 'superadmin') next();
-    else res.status(403).json({message: "Super Admin access required"})
+    if(req.user.role === 'superadmin'){
+      return next();
+    } 
+    return res.status(403).json({message: "Access denied: SuperAdmin access only"})
 }
 
+const isAdminOrSuperAdmin  = (req, res, next) => {
+  if (req.user.role === 'admin' || req.user.role === 'superadmin'){
+    return next();
+  } 
+  return res.status(403).json({message: "Access denied: Admin or SuperAdmin only"});
+}
 
-module.exports = {verifyToken, isAdmin, isSuperAdmin}
+module.exports = {verifyToken, isAdmin, isSuperAdmin, isAdminOrSuperAdmin }
