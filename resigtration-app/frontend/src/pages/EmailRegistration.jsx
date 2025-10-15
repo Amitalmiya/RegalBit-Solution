@@ -3,35 +3,33 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const EmailRegistration = () => {
-  
+
   const [email, setEmail] = useState("");
 
   const [userName, setUserName] = useState("");
 
   const [password, setPassword] = useState("");
-
+  
   const [error, setError] = useState("");
-
+  
   const [otpData, setOtpData] = useState(null);
-
+  
   const [enteredOtp, setEnteredOtp] = useState("");
-
+  
   const [isVerified, setIsVerified] = useState(false);
-
+  
   const [disableTime, setDisableTime] = useState(0);
+  
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
-
+  
   const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
-
+  
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setEmail(e.target.value);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,10 +42,14 @@ const EmailRegistration = () => {
       setError("Enter a valid Username");
       return;
     }
+
     if (!passwordRegex.test(password)) {
-      setError("Enter a valid Password");
+      setError(
+        "Password must have 8+ characters, including uppercase, lowercase, number, and special character."
+      );
       return;
     }
+
     setError("");
 
     try {
@@ -55,35 +57,36 @@ const EmailRegistration = () => {
         "http://localhost:5000/api/auth/signup/requestemail-otp",
         { userName, email, password }
       );
+
       console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your Email Address");
-      setError("otp not send")
       setOtpData(true);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to send OTP");
     }
   };
 
-const handleOtpVerify = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post(
-      "http://localhost:5000/api/auth/signup/verifyemail-otp",
-      { email, userName, password, otp: enteredOtp }
-    );
+  const handleOtpVerify = async (e) => {
+    e.preventDefault();
 
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup/verifyemail-otp",
+        { email, userName, password, otp: enteredOtp }
+      );
 
-    setIsVerified(true);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      setIsVerified(true);
 
-    const userId = res.data.token.id;
-    navigate(`/profile/${userId}`);
+      const userId = res.data.user?.id;
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || "OTP verification failed";
+      alert(errorMsg);
 
-  } catch (error) {
-    alert(error.response?.data?.error || "OTP verification failed");
-      if (error.response?.data?.error?.includes("Try again in")) {
-        const match = error.response.data.error.match(/(\d+)/);
+      if (errorMsg.includes("Try again in")) {
+        const match = errorMsg.match(/(\d+)/);
         if (match) {
           setDisableTime(parseInt(match[1]) * 60);
           const timer = setInterval(() => {
@@ -97,18 +100,26 @@ const handleOtpVerify = async (e) => {
           }, 1000);
         }
       }
+
+      if (errorMsg.includes("Wrong OTP")) {
+        setError(errorMsg);
+      }
+
+      if (errorMsg.includes("permanently blocked")) {
+        setError("Your account has been permanently blocked. Contact admin.");
+      }
     }
   };
 
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-gray-100 py-20">
-      <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
+      <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white bg-white">
         <h2 className="text-2xl text-center font-bold underline">
           Login / Signup with Email Address
         </h2>
 
         {!otpData ? (
-          <form action="" className="py-10" onSubmit={handleSubmit}>
+          <form className="py-10" onSubmit={handleSubmit}>
             <div className="mb-3">
               <label className="italic">Username :</label>
               <input
@@ -120,47 +131,50 @@ const handleOtpVerify = async (e) => {
                 required
               />
             </div>
+
             <div className="mb-3">
-              <label htmlFor="" className="italic">
-                Email Address :
-              </label>
+              <label className="italic">Email Address :</label>
               <input
                 type="email"
                 placeholder="example@gmail.com"
                 className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
                 value={email}
-                onChange={handleChange}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <div className="mb-3">
-                <label className="italic">Password :</label>
-                <input
-                  type="password"
-                  placeholder="Enter password"
-                  className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              {error && <p className="text-red-500 italicmt-1">{error}</p>}
             </div>
+
+            <div className="mb-3">
+              <label className="italic">Password :</label>
+              <input
+                type="password"
+                placeholder="Enter password"
+                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            {error && <p className="text-red-500 italic mt-1">{error}</p>}
+
             <button
               type="submit"
-              className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-200 "
+              className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-400 text-white mt-3"
             >
               Sign up with OTP
             </button>
+
             <div className="mb-3 text-center space-y-2">
               <Link
                 to="/phone"
-                className="mt-3 italic text-sm block text-blue-800 w-full py-1 cursor:pointer underline hover:text-red-500"
+                className="mt-3 italic text-sm block text-blue-800 w-full py-1 underline hover:text-red-500"
               >
-                Login with (+91 IND)Phone Number
+                Login with (+91 IND) Phone Number
               </Link>
               <Link
                 to="/"
-                className="underline text-sm text-blue-800 italic block w-full py-1 cursor:pointer hover:text-red-500"
+                className="underline text-sm text-blue-800 italic block w-full py-1 hover:text-red-500"
               >
                 Register Yourself
               </Link>
@@ -178,20 +192,38 @@ const handleOtpVerify = async (e) => {
                 onChange={(e) => setEnteredOtp(e.target.value)}
                 maxLength={6}
                 required
+                disabled={disableTime > 0}
               />
             </div>
+
+            {error && (
+              <p className="text-red-600 italic text-center mt-2">{error}</p>
+            )}
+
+            {disableTime > 0 && (
+              <p className="text-yellow-600 italic text-center mt-2">
+                Please wait{" "}
+                {Math.floor(disableTime / 60)
+                  .toString()
+                  .padStart(2, "0")}
+                :
+                {(disableTime % 60)
+                  .toString()
+                  .padStart(2, "0")}{" "}
+                before retrying.
+              </p>
+            )}
+
             <button
               type="submit"
-              className="italic border rounded-[5px] w-full bg-green-500 py-2 cursor-pointer hover:bg-green-300"
+              className={`italic border rounded-[5px] w-full py-2 cursor-pointer ${
+                disableTime > 0
+                  ? "bg-gray-400"
+                  : "bg-green-500 hover:bg-green-400 text-white"
+              }`}
               disabled={disableTime > 0}
             >
-              {disableTime > 0
-                ? `Try again in ${Math.floor(disableTime / 60)
-                    .toString()
-                    .padStart(2, "0")}:${(disableTime % 60)
-                    .toString()
-                    .padStart(2, "0")}`
-                : "Verify OTP"}
+              {disableTime > 0 ? "Please Wait..." : "Verify OTP"}
             </button>
           </form>
         ) : (

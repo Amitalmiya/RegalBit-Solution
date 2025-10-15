@@ -8,6 +8,8 @@ const {pool, poolPhone, poolEmail} = require('./config/db')
 const usersRoutes = require('./routes/userRoutes');
 const otpRoutes = require('./routes/authRouter');
 const createDefaultSuperAdmin = require('./utils/createDefaultSuperAdmin');
+const path = require('path')
+
 
 const app = express();
 
@@ -34,6 +36,10 @@ app.get('/', (req, res) => {
 app.use('/api/users', usersRoutes);
 
 app.use('/api/auth', otpRoutes);
+
+app.use((req, res) => {
+    res.status(404).sendFile(__dirname, 'view', 'page-not-found.html')
+})
 
 
 async function initDB() {

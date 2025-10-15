@@ -14,6 +14,7 @@ import Profile from "./components/Profile";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Dashboard from "./components/Dashboard";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
+import NotFound from "./components/NotFound";
 
 function App() {
   const isLoggedIn = localStorage.getItem("token");
@@ -30,6 +31,7 @@ function App() {
           <Route path="/users" element={<AllUser />} />
           <Route path="/edit/:id" element={<EditUser />} />
           <Route path="/view/:id" element={<ViewUsers />} />
+          <Route path="*" element={<NotFound />} />
           <Route
             path="/home"
             element={
@@ -48,17 +50,25 @@ function App() {
           />
           <Route path="/dashboard"
           element= {
-              <Dashboard />
-              // <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
-              // </ProtectedRoute>
+            <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
           }
           />
           <Route 
-          path="/superadmin-dashboard"
+          path="/dashboard"
           element = {
-            // <ProtectedRoute allowedRoles={["superadmin"]}>
+            <ProtectedRoute>
               <SuperAdminDashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
+          }
+          />
+          <Route 
+          path="/allusers"
+          element = {
+            <ProtectedRoute>
+              <AllUser />
+            </ProtectedRoute>
           }
           /> 
         </Routes>

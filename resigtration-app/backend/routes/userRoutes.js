@@ -25,14 +25,14 @@ router.put("/update/:id", authenticateToken, updateUser);
 router.get("/:id", authenticateToken, getUserById);
 
 
-router.get("/allusers", authenticateToken, isAdminOrSuperAdmin, allUsers);
+router.get("/", authenticateToken, isAdminOrSuperAdmin, allUsers);
 router.patch("/toggle-status/:id/status", authenticateToken, isAdminOrSuperAdmin, toggleUserStatus);
 
 
 router.delete("/delete/:id", authenticateToken, isSuperAdmin, deleteUser);
-router.get("/superadmin-dashboard", authenticateToken, isSuperAdmin);
+router.get("/dashboard", authenticateToken, isSuperAdmin);
 
 
-router.get("/admin-dashboard", authenticateToken, isAdminOrSuperAdmin);
+router.get("/dashboard", authenticateToken, isAdminOrSuperAdmin);
 
 module.exports = router;

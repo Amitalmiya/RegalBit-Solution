@@ -1,22 +1,21 @@
-const jwt = require("jsonwebtoken");
-
-const JWT_SECRET = process.env.JWT_SECRET || "Amit@123$";
+const { verifyToken } = require('../utils/tokenHelpers')
+const { getUserFromToken } = require('../controllers/userController')
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ message: "Access denied. Token missing" });
+  
+  if (!authHeader) {
+    return res.status(401).json({ message: "Authorization header missing" });
   }
+  
+  const token = authHeader.split(' ')[1];
+  const decoded = verifyToken(token);
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(403).json({ message: "Invalid or expired token" });
-  }
+  if (!decoded) 
+    return res.status(401).json({ message: "Invalid or expired token"});
+
+  req.user = decoded;
+  next();
 };
 
 module.exports = authenticateToken;

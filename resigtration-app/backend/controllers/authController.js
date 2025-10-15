@@ -50,6 +50,7 @@ const verifyPhoneOtp = async (req, res) => {
     if (!phone || !otp)
       return res.status(400).json({ error: "Phone and OTP required" });
 
+    // 1️⃣ Fetch latest OTP
     const [otpRows] = await poolPhone.query(
       `SELECT * FROM otps WHERE contact=? AND purpose='signup' AND is_verified=0 ORDER BY created_at DESC LIMIT 1`,
       [phone]
@@ -58,48 +59,43 @@ const verifyPhoneOtp = async (req, res) => {
 
     const otpRecord = otpRows[0];
 
+    // 2️⃣ Check OTP expiration
     if (new Date(otpRecord.expires_at) < new Date())
       return res.status(400).json({ error: "OTP expired" });
 
-    const [users] = await poolPhone.query(
-      `SELECT * FROM users WHERE phone = ? LIMIT 1`,
-      [phone]
-    );
-
+    // 3️⃣ Check user existence
+    const [users] = await poolPhone.query(`SELECT * FROM users WHERE phone=? LIMIT 1`, [phone]);
     const user = users[0];
 
-    if (user?.permanently_blocked) {
-      return res
-        .status(403)
-        .json({ error: "Account permanently blocked. Contact admin." });
-    }
+    if (user?.permanently_blocked)
+      return res.status(403).json({ error: "Account permanently blocked. Contact admin." });
 
+    // If temporarily blocked, show remaining time
     if (user?.blocked_until && new Date(user.blocked_until) > new Date()) {
-      const minutesLeft = Math.ceil(
-        (new Date(user.blocked_until) - new Date()) / 60000
-      );
-      return res
-        .status(403)
-        .json({ error: `Try again in ${minutesLeft} minutes` });
+      const minutesLeft = Math.ceil((new Date(user.blocked_until) - new Date()) / 60000);
+      return res.status(403).json({ error: `Try again in ${minutesLeft} minutes` });
     }
 
+    // 4️⃣ Validate OTP
     if (String(otpRecord.otp) !== String(otp)) {
       let failedAttempts = (user?.failed_attempts || 0) + 1;
-      let blockTime = 0;
 
-      if (failedAttempts === 2) blockTime = 2;
-      if (failedAttempts === 3) blockTime = 4;
-      if (failedAttempts === 4) blockTime = 8;
-      if (failedAttempts >= 6) {
+      // Define lock durations (in minutes)
+      const lockDurations = [0, 2, 4]; // 1st fail: 0, 2nd: 2 mins, 3rd: 4 mins
+
+      // If reached 3 or more failed attempts => permanently blocked
+      if (failedAttempts >= 3) {
         await poolPhone.query(
           `UPDATE users SET permanently_blocked=1 WHERE phone=?`,
           [phone]
         );
         return res
           .status(403)
-          .json({ error: "Account permanently blocked. Contact admin." });
+          .json({ error: "Account permanently blocked after 3 wrong attempts." });
       }
 
+      // Set temporary block
+      const blockTime = lockDurations[failedAttempts] || 0;
       const blockedUntil = blockTime
         ? new Date(Date.now() + blockTime * 60 * 1000)
         : null;
@@ -113,11 +109,12 @@ const verifyPhoneOtp = async (req, res) => {
 
       return res.status(400).json({
         error: blockTime
-          ? `Wrong OTP. Try again in ${blockTime} minutes`
-          : "Invalid OTP",
+          ? `Wrong OTP. Try again in ${blockTime} minutes.`
+          : "Invalid OTP.",
       });
     }
 
+    // 5️⃣ If OTP is correct — reset failed attempts
     if (user) {
       await poolPhone.query(
         `UPDATE users SET failed_attempts=0, blocked_until=NULL WHERE phone=?`,
@@ -126,35 +123,30 @@ const verifyPhoneOtp = async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    await poolPhone.query("UPDATE otps SET is_verified=1 WHERE id=?", [
-      otpRecord.id,
-    ]);
+    // 6️⃣ Mark OTP verified
+    await poolPhone.query(`UPDATE otps SET is_verified=1 WHERE id=?`, [otpRecord.id]);
 
+    // 7️⃣ Hash password and create new user
     const passwordHash = await bcrypt.hash(password, 10);
-
     const [result] = await poolPhone.query(
-      `INSERT INTO users (userName, phone, password_hash) VALUES (?, ?, ?)`,
-      [userName, phone, passwordHash]
+      `INSERT INTO users (userName, phone, password_hash, role) VALUES (?, ?, ?, ?)`,
+      [userName, phone, passwordHash, "user"]
     );
 
-    // ✅ FIXED JWT part
+    // 8️⃣ Generate JWT
     const token = jwt.sign(
-      {
-        id: result.insertId,
-        userName,
-        phone,
-      },
+      { id: result.insertId, userName, phone, role: "user" },
       JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "1h" }
     );
 
     res.status(201).json({
-      message: "User created and logged in with phone successfully",
+      message: "User created and logged in successfully via phone",
       token,
       user: { id: result.insertId, userName, phone },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error verifying OTP:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };
@@ -205,10 +197,14 @@ const verifyEmailOtp = async (req, res) => {
     const emailLower = email.toLowerCase();
 
     const [otpRows] = await poolEmail.query(
-      `SELECT * FROM otps WHERE contact=? AND purpose='signup' AND is_verified=0 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT * FROM otps 
+       WHERE contact=? AND purpose='signup' AND is_verified=0 
+       ORDER BY created_at DESC LIMIT 1`,
       [emailLower]
     );
-    if (!otpRows.length) return res.status(400).json({ error: "No OTP found" });
+
+    if (!otpRows.length)
+      return res.status(400).json({ error: "No OTP found or already used" });
 
     const otpRecord = otpRows[0];
 
@@ -222,40 +218,54 @@ const verifyEmailOtp = async (req, res) => {
 
     const user = users[0];
 
-    if (user?.permanently_blocked)
+    if (user?.permanently_blocked) {
       return res
         .status(403)
         .json({ error: "Account permanently blocked. Contact admin." });
+    }
 
     if (user?.blocked_until && new Date(user.blocked_until) > new Date()) {
       const minutesLeft = Math.ceil(
         (new Date(user.blocked_until) - new Date()) / 60000
       );
-      return res.status(403).json({ error: `Try again in ${minutesLeft} minutes` });
+      return res
+        .status(403)
+        .json({ error: `Try again in ${minutesLeft} minutes` });
     }
 
     if (String(otpRecord.otp) !== String(otp)) {
-      let failedAttempts = (user?.failed_attempts || 0) + 1;
+      const failedAttempts = (user?.failed_attempts || 0) + 1;
       let blockTime = 0;
 
-      if (failedAttempts === 2) blockTime = 2;
-      if (failedAttempts === 3) blockTime = 4;
-      if (failedAttempts === 4) blockTime = 8;
-      if (failedAttempts >= 6) {
-        await poolEmail.query(`UPDATE users SET permanently_blocked=1 WHERE email=?`, [emailLower]);
-        return res.status(403).json({ error: "Account permanently blocked. Contact admin." });
+      if (failedAttempts === 1) blockTime = 1;
+      if (failedAttempts === 2) blockTime = 2; 
+      if (failedAttempts === 3) blockTime = 5; 
+
+      if (failedAttempts >= 4) {
+        await poolEmail.query(
+          `UPDATE users SET permanently_blocked=1 WHERE email=?`,
+          [emailLower]
+        );
+        return res
+          .status(403)
+          .json({ error: "Account permanently blocked. Contact admin." });
       }
 
-      const blockedUntil = blockTime ? new Date(Date.now() + blockTime * 60 * 1000) : null;
+      const blockedUntil = new Date(Date.now() + blockTime * 60 * 1000);
 
-      if (user)
+      if (user) {
         await poolEmail.query(
-          `UPDATE users SET failed_attempts=?, blocked_until=? WHERE email=?`,
+          `UPDATE users 
+           SET failed_attempts=?, blocked_until=? 
+           WHERE email=?`,
           [failedAttempts, blockedUntil, emailLower]
         );
+      }
 
       return res.status(400).json({
-        error: blockTime ? `Wrong OTP. Try again in ${blockTime} minutes` : "Invalid OTP",
+        error: `Wrong OTP. Try again in ${blockTime} minute${
+          blockTime > 1 ? "s" : ""
+        }`,
       });
     }
 
@@ -278,17 +288,24 @@ const verifyEmailOtp = async (req, res) => {
       });
     }
 
-    await poolEmail.query("UPDATE otps SET is_verified=1 WHERE id=?", [otpRecord.id]);
+    await poolEmail.query("UPDATE otps SET is_verified=1 WHERE id=?", [
+      otpRecord.id,
+    ]);
 
     const passwordHash = await bcrypt.hash(password, 10);
 
     const [result] = await poolEmail.query(
-      `INSERT INTO users (userName, email, password_hash) VALUES (?, ?, ?)`,
-      [userName, emailLower, passwordHash]
+      `INSERT INTO users (userName, email, password_hash, role) VALUES (?, ?, ?, ?)`,
+      [userName, emailLower, passwordHash, "user"]
     );
 
     const token = jwt.sign(
-      { id: result.insertId, userName, email: emailLower },
+      {
+        id: result.insertId,
+        userName,
+        email: emailLower,
+        role: "user",
+      },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -299,7 +316,7 @@ const verifyEmailOtp = async (req, res) => {
       user: { id: result.insertId, userName, email: emailLower },
     });
   } catch (err) {
-    console.error(err);
+    console.error("verifyEmailOtp Error:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };

@@ -5,10 +5,14 @@ import { IoIosLogOut } from "react-icons/io";
 import axios from "axios";
 
 const NavbarMain = () => {
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+  
+  const role = localStorage.getItem("role");
+  
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
+    const token = localStorage.getItem("token");
+    if (!token) {
       navigate("/login");
     }
   }, [navigate]);
@@ -35,6 +39,7 @@ const NavbarMain = () => {
         }
       });
       navigate(`/profile/${token}`);
+      console.log(res.data);
     } catch (error) {
       console.log("Error fetching user data", error);
       alert("Unable to fetch profile data");
@@ -44,12 +49,29 @@ const NavbarMain = () => {
   return (
     <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
       <div className="flex space-x-4">
+        <Link to="/dashboard"
+          className="hover:bg-blue-700 px-3 py-2 rounded transition"
+        >
+        Dashboard
+        </Link>
+
+        {(role === 'user') && (
+
         <Link
           to="/home"
           className="hover:bg-blue-700 px-3 py-2 rounded transition"
         >
           Home
         </Link>
+        )}
+        {(role === 'admin' || role === 'superadmin') && (
+          <Link to='/allusers'
+          className="hover:bg-blue-700 px-3 py-2 rounded transition"
+        >
+            AllUsers
+        </Link>
+        )}
+        
       </div>
       <div className="flex space-x-2">
         <button
