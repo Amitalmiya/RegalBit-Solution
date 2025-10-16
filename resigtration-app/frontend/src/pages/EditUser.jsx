@@ -103,10 +103,10 @@ const fields = [
   {
     name: "gender",
     label: "Gender :",
-    type : "select",
-    option: ["Male", "Female", "Other"]
+    type: "select",
+    option: ["Male", "Female", "Other"],
   },
-   {
+  {
     name: "bloodGroup",
     label: "Blood Group :",
     type: "select",
@@ -116,54 +116,62 @@ const fields = [
 
 const EditUser = () => {
   const { id } = useParams();
-
-  const [edit, setEdit] = useState({initialForm});
-
+  const navigate = useNavigate();
+  const [edit, setEdit] = useState(initialForm);
   const [errors, setErrors] = useState({});
 
-  const navigate = useNavigate();
-
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get(`http://localhost:5000/api/users/${id}`)
-      .then((res) => setEdit(res.data))
-      .catch((err) => alert(`Error fetching user: ${err.message}`))
+      .get(`http://localhost:5000/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setEdit(res.data.user))
+      .catch((err) => alert(`Error fetching user: ${err.message}`));
   }, [id]);
 
   const handleFormEdit = async (e) => {
     e.preventDefault();
     try {
+
       const existingUsers = await axios.get("http://localhost:5000/api/users");
 
       const userEmailExist = existingUsers.data.some(
-        (u) => u.email === edit.email && u.id !== parseInt(id)
+        (u) => u.email === edit.email && u.id.toString() !== id
       );
-
       if (userEmailExist) {
         alert("Email already exists");
         return;
       }
 
-      const userNameExist = existingUsers.data.some((u)=> u.userName === edit.userName && u.id !== parseInt(id));
-
-      if (userNameExist){
+      const userNameExist = existingUsers.data.some(
+        (u) => u.userName === edit.userName && u.id.toString() !== id
+      );
+      if (userNameExist) {
         alert("Username already exists");
         return;
       }
 
-      await axios.put(`http://localhost:5000/api/users/${id}`, edit);
-      alert("User Data Update Successfully!");
+      const token = localStorage.getItem("token");
+      await axios.put(`http://localhost:5000/api/users/update/${id}`, edit, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert("User updated successfully!");
       navigate("/users");
     } catch (error) {
-      alert("Update Failed");
+      console.error(error);
+      alert("Update failed!");
     }
   };
 
   return (
-    <div className="flex item-center justify-center  w-full bg-gray-100 min-h-screen py-8">
-      <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
-        <h2 className="text-2xl text-center font-bold underline">Edit Form</h2>
-        <form action="" className="py-10" onSubmit={handleFormEdit}>
+    <div className="bg-gray-200 flex items-center justify-center w-full min-h-screen py-8">
+      <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white bg-white">
+        <h2 className="text-2xl text-center font-bold underline mb-6">
+          Edit User
+        </h2>
+        <form onSubmit={handleFormEdit}>
           {fields.map(
             ({
               name,
@@ -173,61 +181,65 @@ const EditUser = () => {
               maxLength,
               minLength,
               option = [],
-              ...rest
             }) => (
               <div className="mb-4" key={name}>
                 <label className="italic">{label}</label>
-              {type === 'select' ? (
-                <select name={name} 
-                  value={edit[name]}
-                  onChange={(e) => {
-                    setEdit({...edit, [name]: e.target.value});
-                  }}
-                  className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                  required
-                >
-                  <option>Select {label.replace(":", "")}</option>
-                   {option.map((opt) => (
+                {type === "select" ? (
+                  <select
+                    name={name}
+                    value={edit[name] || ""}
+                    onChange={(e) =>
+                      setEdit({ ...edit, [name]: e.target.value })
+                    }
+                    className="border w-full focus:ring-1 focus:ring-black italic text-center"
+                    required
+                  >
+                    <option value="">Select {label.replace(":", "")}</option>
+                    {option.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
                     ))}
-                </select>
-              ) : (
-                <input
-                  type={type}
-                  name={name}
-                  placeholder={placeholder}
-                  className="border  w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                  value={edit[name] || ""}
-                  onChange={(e) => {
-                    setEdit({ ...edit, [name]: e.target.value });
-                  }}
-                  required
-                  {...rest}
-                />
-              )}
+                  </select>
+                ) : (
+                  <input
+                    type={type}
+                    name={name}
+                    placeholder={placeholder}
+                    value={edit[name] || ""}
+                    onChange={(e) =>
+                      setEdit({ ...edit, [name]: e.target.value })
+                    }
+                    className="border w-full focus:ring-1 focus:ring-black italic text-center"
+                    maxLength={maxLength}
+                    minLength={minLength}
+                    required
+                  />
+                )}
                 {errors[name] && (
-                  <p className="text-red-500 text-sm mt-1 italic">
+                  <p className="text-red-500 text-sm italic mt-1">
                     {errors[name]}
                   </p>
                 )}
               </div>
             )
           )}
-          <button
-            type="button"
-            className="italic ml-[60px] border rounded-[5px] w-1/3 bg-red-500 py-2 cursor-pointer hover:bg-red-300"
-            onClick={() => navigate("/home")}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="italic ml-[10px] border rounded-[5px] w-1/3 bg-blue-500 py-2 cursor-pointer hover:bg-blue-300"
-          >
-            Update
-          </button>
+
+          <div className="flex justify-center gap-4 mt-6">
+            <button
+              type="button"
+              onClick={() => navigate(`/profile/${id}`)}
+              className="italic border rounded-[5px] w-1/3 bg-red-500 py-2 hover:bg-red-300 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="italic border rounded-[5px] w-1/3 bg-blue-500 py-2 hover:bg-blue-300 transition"
+            >
+              Update
+            </button>
+          </div>
         </form>
       </div>
     </div>

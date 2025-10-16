@@ -13,7 +13,6 @@ import Home from "./components/Home";
 import Profile from "./components/Profile";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Dashboard from "./components/Dashboard";
-import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import NotFound from "./components/NotFound";
 
 function App() {
@@ -53,14 +52,6 @@ function App() {
             <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-          }
-          />
-          <Route 
-          path="/dashboard"
-          element = {
-            <ProtectedRoute>
-              <SuperAdminDashboard />
-            </ProtectedRoute>
           }
           />
           <Route 

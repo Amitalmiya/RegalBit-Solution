@@ -29,7 +29,7 @@ router.get("/", authenticateToken, isAdminOrSuperAdmin, allUsers);
 router.patch("/toggle-status/:id/status", authenticateToken, isAdminOrSuperAdmin, toggleUserStatus);
 
 
-router.delete("/delete/:id", authenticateToken, isSuperAdmin, deleteUser);
+router.delete("/:id", authenticateToken, isSuperAdmin, deleteUser);
 router.get("/dashboard", authenticateToken, isSuperAdmin);
 
 

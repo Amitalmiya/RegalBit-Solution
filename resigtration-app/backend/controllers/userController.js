@@ -36,7 +36,7 @@ const userRegistration = async (req, res) => {
     }
 
     const formattedDOB = new Date(dateOfBirth).toISOString().split("T")[0];
-    const userRole = role?.trim() || "user";
+    const userRole = "user";
     const password_hash = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(

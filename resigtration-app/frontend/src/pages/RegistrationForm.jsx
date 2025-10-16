@@ -218,16 +218,34 @@ const RegistrationForm = () => {
 };
 
   const fieldsPerStep = 4;
-  const startIndex = step * fieldsPerStep;
-  const endIndex = startIndex + fieldsPerStep;
-  const currentFields = fields.slice(startIndex, endIndex);
+  const totalSteps = Math.ceil(fields.length / fieldsPerStep)
+  const currentFields = fields.slice(step * fieldsPerStep, (step + 1) * fieldsPerStep)
 
   return (
     <div className="flex item-center justify-center w-full min-h bg-full bg-gray-100 py-20">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
+        <div className="flex justify-between mb-6">
+          {Array.from({ length: totalSteps }).map((_, index) => (
+            <div
+            key={index}
+            className={`w-8 h-8 flex item-center justify-center rounded-full text-sm items-center italic ${
+              index === step
+              ? "bg-blue-500 text-white" 
+              : index < step
+              ? "bg-green-400 text-white"
+              : "bg-gray-300 text-gray-600"
+            }`}
+            >
+              {index + 1}
+            </div>
+          ))}
+        </div>
         <h2 className="text-2xl text-center font-bold underline">
           Registration Form
         </h2>
+        <p className="text-center text-gray-500 mb-8 italic">
+          Step {step + 1} of {totalSteps}
+        </p>
 
         <form className="py-10" onSubmit={handleFormSubmit}>
           {currentFields.map(
@@ -285,17 +303,17 @@ const RegistrationForm = () => {
               <button
                 type="button"
                 onClick={() => setStep((prev) => prev - 1)}
-                className="italic border rounded-[5px] bg-gray-300 px-4 py-2 hover:bg-gray-400"
+                className="italic text-white border rounded-[5px] bg-gray-800 px-4 py-2 hover:bg-gray-400"
               >
                 Back
               </button>
             )}
 
-            {step < Math.ceil(fields.length / fieldsPerStep) - 1 ? (
+            {step < totalSteps - 1 ? (
               <button
                 type="button"
                 onClick={() => setStep((prev) => prev + 1)}
-                className="italic mb-3 border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto "
+                className="italic text-white mb-3 border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto "
               >
                 Next
               </button>

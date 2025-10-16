@@ -1,33 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const PhoneRegistration = () => {
+  
   const [userName, setUserName] = useState("");
-  
+
   const [password, setPassword] = useState("");
-  
+
+  const [showPassword, setShowPassword] = useState(false);
+
   const [phone, setPhone] = useState("");
-  
+
   const [error, setError] = useState("");
-  
+
   const [otpSent, setOtpSent] = useState(false);
-  
+
   const [enteredOtp, setEnteredOtp] = useState("");
-  
+
   const [isVerified, setIsVerified] = useState(false);
-  
+
   const [disableTime, setDisableTime] = useState(0);
-  
+
   const [attemptsLeft, setAttemptsLeft] = useState(3);
-  
+
 
   const navigate = useNavigate();
 
   const indianPhoneRegex = /^(\+91)?[6-9]\d{9}$/;
-  
   const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
-  
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -50,18 +52,24 @@ const PhoneRegistration = () => {
   const handleRequestOtp = async (e) => {
     e.preventDefault();
 
-    if (!indianPhoneRegex.test(phone)) return setError("Enter a valid Indian phone number");
-    if (!userNameRegex.test(userName)) return setError("Enter a valid username");
-    if (!passwordRegex.test(password)) return setError("Enter a valid password");
+    if (!indianPhoneRegex.test(phone))
+      return setError("Enter a valid Indian phone number");
+    if (!userNameRegex.test(userName))
+      return setError("Enter a valid username");
+    if (!passwordRegex.test(password))
+      return setError("Enter a valid password");
 
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/signup/requestphone-otp", {
-        userName,
-        password,
-        phone,
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup/requestphone-otp",
+        {
+          userName,
+          password,
+          phone,
+        }
+      );
 
       console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your phone number!");
@@ -78,12 +86,15 @@ const PhoneRegistration = () => {
     if (!enteredOtp) return setError("Please enter the OTP");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/signup/verifyphone-otp", {
-        userName,
-        phone,
-        password,
-        otp: enteredOtp,
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/signup/verifyphone-otp",
+        {
+          userName,
+          phone,
+          password,
+          otp: enteredOtp,
+        }
+      );
 
       console.log("Login with Phone Response", res.data);
       localStorage.setItem("token", res.data.token);
@@ -102,7 +113,6 @@ const PhoneRegistration = () => {
         }
       }
 
-      // Track attempts
       setAttemptsLeft((prev) => {
         const newAttempts = prev - 1;
         if (newAttempts <= 0) {
@@ -142,16 +152,22 @@ const PhoneRegistration = () => {
               />
             </div>
 
-            <div className="mb-3">
+            <div className="mb-3 relative">
               <label className="italic">Password :</label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter password"
-                className="border w-full text-center italic focus:ring-1 focus:ring-black"
+                className="border w-full text-center italic focus:ring-1 focus:ring-black pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[30px] cursor-pointer text-gray-600 hover:text-black"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
             </div>
 
             <div className="mb-3">
@@ -232,12 +248,14 @@ const PhoneRegistration = () => {
                 : "Verify OTP"}
             </button>
 
-            {error && <p className="text-red-500 text-center italic mt-3">{error}</p>}
+            {error && (
+              <p className="text-red-500 text-center italic mt-3">{error}</p>
+            )}
           </form>
         ) : (
           <div className="text-center py-10">
             <p className="text-green-600 font-bold italic">
-              ✅ Phone Number Verified! You are logged in.
+              Phone Number Verified! You are logged in.
             </p>
           </div>
         )}

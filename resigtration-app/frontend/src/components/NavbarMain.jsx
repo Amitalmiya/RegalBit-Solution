@@ -75,6 +75,7 @@ const NavbarMain = () => {
       </div>
       <div className="flex space-x-2">
         <button
+          title="Profile"
           onClick={handleProfile}
           className="bg-red-700 hover:bg-red-400 px-3 py-2 rounded transition cursor-pointer hover:focus:ring-1 focus:ring-white"
         >
@@ -82,6 +83,7 @@ const NavbarMain = () => {
         </button>
 
         <button
+          title="Logout"
           className="bg-red-700 hover:bg-red-400 px-3 py-2 rounded transition cursor-pointer hover:focus:ring-1 focus:ring-white"
           onClick={handleLogOut}
         >

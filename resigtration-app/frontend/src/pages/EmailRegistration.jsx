@@ -1,48 +1,37 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const EmailRegistration = () => {
-
   const [email, setEmail] = useState("");
-
   const [userName, setUserName] = useState("");
-
   const [password, setPassword] = useState("");
-  
   const [error, setError] = useState("");
-  
   const [otpData, setOtpData] = useState(null);
-  
   const [enteredOtp, setEnteredOtp] = useState("");
-  
   const [isVerified, setIsVerified] = useState(false);
-  
   const [disableTime, setDisableTime] = useState(0);
-  
+  const [showPassword, setShowPassword] = useState(false);
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
-  
   const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
-  
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   const navigate = useNavigate();
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!emailRegex.test(email)) {
       setError("Enter a valid email address");
       return;
     }
-
     if (!userNameRegex.test(userName)) {
       setError("Enter a valid Username");
       return;
     }
-
     if (!passwordRegex.test(password)) {
       setError(
         "Password must have 8+ characters, including uppercase, lowercase, number, and special character."
@@ -144,16 +133,22 @@ const EmailRegistration = () => {
               />
             </div>
 
-            <div className="mb-3">
+            <div className="mb-3 relative">
               <label className="italic">Password :</label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter password"
-                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
+                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[38px] transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-black"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
             </div>
 
             {error && <p className="text-red-500 italic mt-1">{error}</p>}
@@ -206,11 +201,8 @@ const EmailRegistration = () => {
                 {Math.floor(disableTime / 60)
                   .toString()
                   .padStart(2, "0")}
-                :
-                {(disableTime % 60)
-                  .toString()
-                  .padStart(2, "0")}{" "}
-                before retrying.
+                :{(disableTime % 60).toString().padStart(2, "0")} before
+                retrying.
               </p>
             )}
 

@@ -4,19 +4,20 @@ import axios from "axios";
 
 const Profile = () => {
   const { id } = useParams();
-
+  
   const navigate = useNavigate();
-
+  
   const [user, setUser] = useState(null);
-
+  
   const [error, setError] = useState("");
+  
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          setError("User not logged in. Please login Again.");
+          setError("User not logged in. Please login again.");
           navigate("/phone");
           return;
         }
@@ -24,73 +25,105 @@ const Profile = () => {
         const res = await axios.get(
           `http://localhost:5000/api/users/profile/${token}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         setUser(res.data.user);
         navigate(`/profile/${res.data.user.id}`);
       } catch (error) {
-        console.log("Error fetching Profile", error);
-        setError("Failed to fetch user data. plase login again." || error.res?.data.message);
-        // localStorage.removeItem("token");
+        console.error("Error fetching Profile", error);
+        setError(
+          error.response?.data?.message ||
+            "Failed to fetch user data. Please login again."
+        );
       }
     };
 
     fetchUser();
   }, [navigate]);
 
-  if (error) return <p className="text-red-500 text-center py-10">{error}</p>;
+  if (error)
+    return (
+      <p className="text-red-500 text-center py-20 text-lg font-semibold">
+        {error}
+      </p>
+    );
 
-  if (!user) return <p className="text-center py-10">Loading...</p>;
+  if (!user)
+    return (
+      <p className="text-center py-20 text-gray-500 text-lg italic">
+        Loading user details...
+      </p>
+    );
+
+  const getInitials = (name) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
 
   return (
-    <div className="flex justify-center py-20 bg-gray-100 min-h-screen">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-gray-300">
-        <h2 className="text-2xl font-bold text-center underline mb-6">
-          {user.userName} Profile
-        </h2>
-        <div className="space-y-3 mb-10">
-          { user.userName && (
-          <p>
-            <strong>Username:</strong> {user.userName}
+    <div className="flex justify-center items-start py-16 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 min-h-screen">
+      <div className="bg-white shadow-xl rounded-3xl w-full max-w-lg p-8 border border-gray-200 transition-all hover:shadow-2xl">
+        
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-1 rounded-full">
+            <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white bg-gradient-to-tr from-blue-600 to-purple-500">
+                {getInitials(user.userName)}
+              </div>
+            </div>
+          </div>
+          <h2 className="text-3xl font-bold mt-4 text-gray-800 capitalize">
+            {user.userName || "Unknown User"}
+          </h2>
+          <p className="text-gray-500 italic mt-1">
+            {user.email || user.phone || "No contact info"}
           </p>
+        </div>
+
+        <div className="space-y-4 text-gray-700">
+          {user.userName && (
+            <p>
+              <span className="font-semibold">Username:</span> {user.userName}
+            </p>
           )}
           {user.email && (
             <p>
-              <strong>Email:</strong> {user.email}
+              <span className="font-semibold">Email:</span> {user.email}
             </p>
           )}
-
           {user.phone && (
             <p>
-              <strong>Phone:</strong> {user.phone}
+              <span className="font-semibold">Phone:</span> {user.phone}
             </p>
           )}
           {user.dateOfBirth && (
             <p>
-              <strong>Date of Birth:</strong> {user.dateOfBirth}
+              <span className="font-semibold">Date of Birth:</span>{" "}
+              {user.dateOfBirth}
             </p>
           )}
           {user.gender && (
             <p>
-              <strong>Gender:</strong> {user.gender}
+              <span className="font-semibold">Gender:</span> {user.gender}
             </p>
           )}
           {user.bloodGroup && (
             <p>
-              <strong>Blood Group:</strong> {user.bloodGroup}
+              <span className="font-semibold">Blood Group:</span>{" "}
+              {user.bloodGroup}
             </p>
           )}
           {user.websiteUrl && (
             <p>
-              <strong>Website:</strong>{" "}
+              <span className="font-semibold">Website:</span>{" "}
               <a
                 href={user.websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 underline"
+                className="text-blue-500 underline hover:text-blue-700 transition"
               >
                 {user.websiteUrl}
               </a>
@@ -98,34 +131,33 @@ const Profile = () => {
           )}
           {user.creditCardNo && (
             <p>
-              <strong>Credit Card No.:</strong> {user.creditCardNo}
+              <span className="font-semibold">Credit Card No.:</span>{" "}
+              {user.creditCardNo}
             </p>
           )}
           {user.driverLicense && (
             <p>
-              <strong>Driver License:</strong> {user.driverLicense}
+              <span className="font-semibold">Driver License:</span>{" "}
+              {user.driverLicense}
             </p>
           )}
           {user.socialSecurityNo && (
             <p>
-              <strong>Social Security No:</strong> {user.socialSecurityNo}
+              <span className="font-semibold">Social Security No:</span>{" "}
+              {user.socialSecurityNo}
             </p>
           )}
         </div>
-        <div className="flex justify-between">
-          {/* <button className="border rounded border-[1px] px-2 text-center bg-gray-300 hover:bg-gray-100 cursor-pointer"
-            onClick={()=> navigate(`/home`)}
-            >
-              Back to home
-            </button> */}
+
+        <div className="flex justify-between mt-10">
           <button
-            className="border rounded border-[1px] px-2 py-1 text-center bg-blue-500 hover:bg-blue-200 cursor-pointer"
+            className="w-1/2 mr-2 py-2 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-400 transition"
             onClick={() => navigate(`/edit/${id}`)}
           >
             Edit Profile
           </button>
           <button
-            className="border rounded border-[1px] px-2 py-1 text-center bg-blue-500 hover:bg-blue-200 cursor-pointer"
+            className="w-1/2 ml-2 py-2 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-400 transition"
             onClick={() => {
               localStorage.removeItem("token");
               navigate("/phone");
