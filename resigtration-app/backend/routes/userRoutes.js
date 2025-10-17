@@ -11,7 +11,7 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-  toggleUserStatus,
+  userStatus,
   getUserProfile
 } = require("../controllers/userController");
 
@@ -26,7 +26,7 @@ router.get("/:id", authenticateToken, getUserById);
 
 
 router.get("/", authenticateToken, isAdminOrSuperAdmin, allUsers);
-router.patch("/toggle-status/:id/status", authenticateToken, isAdminOrSuperAdmin, toggleUserStatus);
+router.patch("/user-status/:id", authenticateToken, isAdminOrSuperAdmin, userStatus);
 
 
 router.delete("/:id", authenticateToken, isSuperAdmin, deleteUser);

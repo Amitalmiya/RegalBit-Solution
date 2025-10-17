@@ -223,25 +223,48 @@ const deleteUser = async (req, res) => {
 };
 
 
-const toggleUserStatus = async (req, res) => {
+const userStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    let { status } = req.body;
 
-    const [resultMain] = await pool.query(`UPDATE users SET status = ? WHERE id = ?`, [status, id]);
-    const [resultPhone] = await poolPhone.query(`UPDATE users SET status = ? WHERE id = ?`, [status, id]);
-    const [resultEmail] = await poolEmail.query(`UPDATE users SET status = ? WHERE id = ?`, [status, id]);
+    if (!["active", "deactivate"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
 
-    if (resultMain.affectedRows === 0 && resultPhone.affectedRows === 0 && resultEmail.affectedRows === 0) {
+    const dbStatus = status === "deactivate" ? "deactive" : "active";
+
+    const [resultMain] = await pool.query(
+      `UPDATE users SET status = ? WHERE id = ?`,
+      [dbStatus, id]
+    );
+    const [resultPhone] = await poolPhone.query(
+      `UPDATE users SET status = ? WHERE id = ?`,
+      [dbStatus, id]
+    );
+    const [resultEmail] = await poolEmail.query(
+      `UPDATE users SET status = ? WHERE id = ?`,
+      [dbStatus, id]
+    );
+
+    if (
+      resultMain.affectedRows === 0 &&
+      resultPhone.affectedRows === 0 &&
+      resultEmail.affectedRows === 0
+    ) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ message: `User ${status ? "activated" : "deactivated"} successfully` });
+    res.status(200).json({
+      message: `User ${status === "deactivate" ? "deactivated" : "activated"} successfully`,
+      status,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
+
 
 
 module.exports = {
@@ -253,5 +276,5 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
-  toggleUserStatus,
+  userStatus,
 };

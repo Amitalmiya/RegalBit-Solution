@@ -72,7 +72,6 @@ const Login = () => {
             />
           </div>
 
-          {/* ✅ Fixed password field with toggle */}
           <div className="mb-3 relative">
             <label className="italic">Password :</label>
             <input

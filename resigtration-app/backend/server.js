@@ -37,9 +37,9 @@ app.use('/api/users', usersRoutes);
 
 app.use('/api/auth', otpRoutes);
 
-app.use((req, res) => {
-    res.status(404).sendFile(__dirname, 'view', 'page-not-found.html')
-})
+// app.use((req, res) => {
+//     res.status(404).sendFile(__dirname, 'view', 'page-not-found.html')
+// })
 
 
 async function initDB() {
