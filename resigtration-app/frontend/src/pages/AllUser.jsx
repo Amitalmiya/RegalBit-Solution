@@ -138,7 +138,7 @@ const AllUser = () => {
                       onClick={() =>
                         setOpenDropdownId(openDropdownId === u.id ? null : u.id)
                       }
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-800 p-2 rounded-full shadow-sm transition-all duration-200 hover:scale-105"
+                      className="bg-gray-200 cursor-pointer hover:bg-gray-300 text-gray-800 p-2 rounded-full shadow-sm transition-all duration-200 hover:scale-105"
                       title="Actions"
                     >
                       <MoreVertical className="w-5 h-5" />
@@ -146,7 +146,7 @@ const AllUser = () => {
 
                     {openDropdownId === u.id && (
                       <div
-                        className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
+                        className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10 cursor-pointer"
                         onMouseLeave={() => setOpenDropdownId(null)}
                       >
                         <button
@@ -154,7 +154,7 @@ const AllUser = () => {
                             handleView(u.id);
                             setOpenDropdownId(null);
                           }}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-gray-700"
+                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-gray-700 cursor-pointer"
                         >
                           <Eye className="w-4 h-4 text-blue-600" /> View
                         </button>
@@ -164,7 +164,7 @@ const AllUser = () => {
                             handleEdit(u.id);
                             setOpenDropdownId(null);
                           }}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-yellow-50 text-gray-700"
+                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-yellow-50 text-gray-700 cursor-pointer"
                         >
                           <Pencil className="w-4 h-4 text-yellow-600" /> Edit
                         </button>
@@ -174,7 +174,7 @@ const AllUser = () => {
                             handleUserStatus(u.id, u.status);
                             setOpenDropdownId(null);
                           }}
-                          className={`flex items-center gap-2 w-full px-4 py-2 text-left text-sm ${
+                          className={`flex items-center gap-2 w-full px-4 py-2 text-left text-sm cursor-pointer ${
                             u.status === "active"
                               ? "hover:bg-red-50 text-red-600" 
                               : "hover:bg-green-50 text-green-600" 
@@ -189,7 +189,7 @@ const AllUser = () => {
                             handleDelete(u.id);
                             setOpenDropdownId(null);
                           }}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-gray-700"
+                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-gray-70 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4 text-red-600" /> Delete
                         </button>

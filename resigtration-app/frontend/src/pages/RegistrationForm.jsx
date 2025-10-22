@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { RegexPatterns } from "../utils/RegexPatterns";
 import { Link, useNavigate } from "react-router-dom";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
 const initialForm = {
   phone: "",
@@ -105,13 +106,13 @@ const fields = [
     name: "gender",
     label: "Gender :",
     type: "select",
-    option: ["Male", "Female", "Other"],
+    options: ["Male", "Female", "Other"],
   },
   {
     name: "bloodGroup",
     label: "Blood Group :",
     type: "select",
-    option: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
+    options: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
   },
 ];
 
@@ -121,6 +122,8 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
 
   const [step, setStep] = useState(0);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -170,12 +173,12 @@ const RegistrationForm = () => {
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-    const firstErrorKey = Object.keys(newErrors)[0];
-    alert(newErrors[firstErrorKey]); 
-    return false;
-  }
+      const firstErrorKey = Object.keys(newErrors)[0];
+      alert(newErrors[firstErrorKey]);
+      return false;
+    }
 
-  return true;
+    return true;
   };
 
   const handleChange = (e) => {
@@ -186,163 +189,120 @@ const RegistrationForm = () => {
   const navigate = useNavigate();
 
   const handleFormSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  
-  try {
-    const res = await axios.post("http://localhost:5000/api/users", form);
+    try {
+      const res = await axios.post("http://localhost:5000/api/users", form);
 
-    console.log("Registration Response:", res.data);
+      console.log("Registration Response:", res.data);
 
-    if (res.status === 200 || res.status === 201) {
-      alert("Data submitted successfully");
-      setForm(initialForm);
+      if (res.status === 200 || res.status === 201) {
+        alert("Data submitted successfully");
+        setForm(initialForm);
 
-      const token = res.data.token || res.data.user?.id;
-      if (!token) {
-        console.error("User ID not found in response!");
-        return;
+        const token = res.data.token || res.data.user?.id;
+        if (!token) {
+          console.error("User ID not found in response!");
+          return;
+        }
+        localStorage.setItem("token", token);
+
+        navigate(`/profile/${token}`);
+      } else {
+        alert("Something went wrong");
       }
-      localStorage.setItem("token", token);
-
-      navigate(`/profile/${token}`);
-    } else {
-      alert("Something went wrong");
+    } catch (error) {
+      console.error("Registration Error:", error);
+      alert(error.response?.data?.message || "Server Error");
     }
-  } catch (error) {
-    console.error("Registration Error:", error);
-    alert(error.response?.data?.message || "Server Error");
-  }
-};
+  };
 
   const fieldsPerStep = 4;
-  const totalSteps = Math.ceil(fields.length / fieldsPerStep)
-  const currentFields = fields.slice(step * fieldsPerStep, (step + 1) * fieldsPerStep)
+  const totalSteps = Math.ceil(fields.length / fieldsPerStep);
+  const currentFields = fields.slice(
+    step * fieldsPerStep,
+    (step + 1) * fieldsPerStep
+  );
 
-  return (
-    <div className="flex item-center justify-center w-full min-h bg-full bg-gray-100 py-20">
-      <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white">
-        <div className="flex justify-between mb-6">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div
-            key={index}
-            className={`w-8 h-8 flex item-center justify-center rounded-full text-sm items-center italic ${
-              index === step
-              ? "bg-blue-500 text-white" 
-              : index < step
-              ? "bg-green-400 text-white"
-              : "bg-gray-300 text-gray-600"
-            }`}
-            >
-              {index + 1}
-            </div>
-          ))}
+   return (
+    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+      <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex flex-1">
+        <div className="flex-1 bg-indigo-100 hidden lg:flex justify-center items-center">
+          <div
+            className="m-12 xl:m-16 w-full h-full bg-contain bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('https://img.freepik.com/free-vector/freelance-remote-workers-flat-composition-with-domestic-scenery-woman-working-home-with-laptop_1284-59822.jpg?semt=ais_incoming&w=740&q=80')" }}
+          />
         </div>
-        <h2 className="text-2xl text-center font-bold underline">
-          Registration Form
-        </h2>
-        <p className="text-center text-gray-500 mb-8 italic">
-          Step {step + 1} of {totalSteps}
-        </p>
+        <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-8">
+          <img src="https://media.licdn.com/dms/image/v2/C510BAQFoBzmJKOzY_A/company-logo_200_200/company-logo_200_200/0/1630619835821/regalbit_solutions_logo?e=2147483647&v=beta&t=N4zeufGLJGf7cpGoaFn2Mn1mR9Gd1HYn-nZqkpaXaa8" alt="Logo" className="w-28 mx-auto mb-4" />
+          <h1 className="text-2xl xl:text-3xl font-extrabold mb-6 text-center">Register a new account</h1>
 
-        <form className="py-10" onSubmit={handleFormSubmit}>
-          {currentFields.map(
-            ({
-              name,
-              label,
-              type,
-              placeholder,
-              maxLength,
-              minLength,
-              option = [],
-            }) => (
-              <div className="mb-4" key={name}>
-                <label className="italic">{label}</label>
+          <div className="flex justify-center mb-6 space-x-2">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <div key={index} className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${index === step ? "bg-blue-500 text-white" : index < step ? "bg-green-400 text-white" : "bg-gray-300 text-gray-600"}`}>
+                {index + 1}
+              </div>
+            ))}
+          </div>
+            
+          <form onSubmit={handleFormSubmit} className="mx-auto max-w-xs">
+            {currentFields.map((field) => (
+              <div className="mb-4 relative" key={field.name}>
+                <label className="block mb-1">{field.label}</label>
 
-                {type === "select" ? (
-                  <select
-                    name={name}
-                    value={form[name]}
-                    onChange={handleChange}
-                    className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                    required
-                  >
-                    <option value="">Select {label.replace(":", "")}</option>
-                    {option.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
+                {field.type === "select" ? (
+                  <select name={field.name} value={form[field.name]} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white">
+                    <option value="">Select {field.label}</option>
+                    {field.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 ) : (
-                  <input
-                    type={type}
-                    name={name}
-                    placeholder={placeholder}
-                    className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                    value={form[name]}
-                    onChange={handleChange}
-                    required
-                    maxLength={maxLength}
-                    minLength={minLength}
-                  />
-                )}
-                {errors[name] && (
-                  <p className="text-red-500 text-sm mt-1 italic">
-                    {errors[name]}
-                  </p>
+                  <>
+                    <input
+                      name={field.name}
+                      type={field.name === "password" ? (showPassword ? "text" : "password") : field.type}
+                      placeholder={field.placeholder}
+                      value={form[field.name]}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white"
+                    />
+                    {field.name === "password" && (
+                      <span
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-9 cursor-pointer text-gray-600 hover:text-gray-900"
+                      >
+                        {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
-            )
-          )}
+            ))}
 
-          <div className="flex justify-between mt-2">
-            {step > 0 && (
-              <button
-                type="button"
-                onClick={() => setStep((prev) => prev - 1)}
-                className="italic text-white border rounded-[5px] bg-gray-800 px-4 py-2 hover:bg-gray-400"
-              >
-                Back
-              </button>
-            )}
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-5">
+              {step > 0 && <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Back</button>}
+              {step < totalSteps - 1 ? (
+                <button type="button" onClick={() => setStep(step + 1)} className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 ml-auto">Next</button>
+              ) : (
+                <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-auto">Register</button>
+              )}
+            </div>
 
-            {step < totalSteps - 1 ? (
-              <button
-                type="button"
-                onClick={() => setStep((prev) => prev + 1)}
-                className="italic text-white mb-3 border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto "
-              >
-                Next
-              </button>
-            ) : (
-              <div className="">
-                <button
-                  type="submit"
-                  className="italic border rounded-[5px] bg-blue-500 px-4 py-2 hover:bg-blue-300 ml-auto"
-                >
-                  Register
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="text-center justify-center">
-            <Link
-              to="/email"
-              className="underline mb-2 italic text-sm block text-blue-800 underline hover:text-red-500 "
-            >
-              Login with Email
-            </Link>
-            <Link
-              to="/phone"
-              className="underline text-sm text-blue-800 italic block hover:text-red-500"
-            >
-              Login with Phone(IND +91)
-            </Link>
-          </div>
-        </form>
+            <div className="mt-4 flex flex-col space-y-2 text-center">
+              <Link to="/login" className="text-blue-500 hover:underline">Already have an account?</Link>
+              <Link to="/email" className="text-blue-500 hover:underline">Create an account with Phone</Link>
+              <Link to="/phone" className="text-blue-500 hover:underline">Create an account with Email</Link>
+            </div>
+          </form>
+
+          <p className="mt-6 text-xs text-gray-600 text-center">
+            By registering, I agree to the{" "}
+            <Link to="#" className="border-b border-gray-500 border-dotted">Terms of Service</Link> and{" "}
+            <Link to="#" className="border-b border-gray-500 border-dotted">Privacy Policy</Link>.
+          </p>
+        </div>
       </div>
     </div>
   );

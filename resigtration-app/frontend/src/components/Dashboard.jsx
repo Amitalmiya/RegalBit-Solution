@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, Trash2, UserCheck, UserX } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Trash2, UserCheck, UserX } from "lucide-react";
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
@@ -9,6 +10,7 @@ const Dashboard = () => {
 
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -96,6 +98,17 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold text-center mb-6">
           Welcome to the {role || "User"} Dashboard
         </h1>
+
+        {role === "superadmin" && (
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => navigate("/add-newUser")}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
+            >
+              + Add New User
+            </button>
+          </div>
+        )}
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 

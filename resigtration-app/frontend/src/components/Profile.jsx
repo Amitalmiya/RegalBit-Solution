@@ -3,14 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 const Profile = () => {
+  
   const { id } = useParams();
-  
+
   const navigate = useNavigate();
-  
+
   const [user, setUser] = useState(null);
-  
+
   const [error, setError] = useState("");
-  
+
 
   useEffect(() => {
     const fetchUser = async () => {

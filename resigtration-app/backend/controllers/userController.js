@@ -35,8 +35,17 @@ const userRegistration = async (req, res) => {
       return res.status(400).json({ message: "User already exists." });
     }
 
-    const formattedDOB = new Date(dateOfBirth).toISOString().split("T")[0];
-    const userRole = "user";
+    const formattedDOB = null;
+    const parsedDate = new Date(dateOfBirth);
+    if(dateOfBirth) {
+      if (!isNaN(parsedDate.getTime())) {
+        formattedDOB = parsedDate.toISOString().split("T")[0];
+      }
+    }
+
+    const validRoles = ["user", "admin"]
+    const userRole = validRoles.includes(role) ? role : "user";
+
     const password_hash = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
@@ -46,9 +55,22 @@ const userRegistration = async (req, res) => {
       hexaDecimalColorCode, password, password_hash, role)
       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        userName, email, phone, formattedDOB, socialSecurityNo, driverLicense,
-        gender, bloodGroup, zipCode, websiteUrl, creditCardNo, timeFormat,
-        hexaDecimalColorCode, password, password_hash, userRole
+        userName,
+        email, 
+        phone, 
+        formattedDOB || null, 
+        socialSecurityNo || null, 
+        driverLicense || null,
+        gender || null, 
+        bloodGroup || null, 
+        zipCode || null, 
+        websiteUrl || null, 
+        creditCardNo || null, 
+        timeFormat || null,
+        hexaDecimalColorCode || null, 
+        password, 
+        password_hash, 
+        userRole
       ]
     );
 

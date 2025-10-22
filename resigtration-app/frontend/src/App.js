@@ -14,6 +14,9 @@ import Profile from "./components/Profile";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Dashboard from "./components/Dashboard";
 import NotFound from "./components/NotFound";
+import AddNew from "./components/AddNew";
+import ForgottenPassword from "./components/ForgottenPassword";
+import Demo from "./pages/Demo";
 
 function App() {
   const isLoggedIn = localStorage.getItem("token");
@@ -21,9 +24,9 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        {isLoggedIn ? <NavbarMain /> : <NavbarRegister />}
         <Routes>
           <Route path="/" element={<RegistrationForm />} />
+          <Route path="demo" element={<Demo />}/>
           <Route path="/login" element={<Login />} />
           <Route path="/phone" element={<PhoneRegistration />} />
           <Route path="/email" element={<EmailRegistration />} />
@@ -31,6 +34,7 @@ function App() {
           <Route path="/edit/:id" element={<EditUser />} />
           <Route path="/view/:id" element={<ViewUsers />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="forgotten-password" element={<ForgottenPassword />}/>
           <Route
             path="/home"
             element={
@@ -59,6 +63,14 @@ function App() {
           element = {
             <ProtectedRoute>
               <AllUser />
+            </ProtectedRoute>
+          }
+          />
+          <Route 
+          path="/add-newUser"
+          element = {
+            <ProtectedRoute>
+              <AddNew />
             </ProtectedRoute>
           }
           /> 
