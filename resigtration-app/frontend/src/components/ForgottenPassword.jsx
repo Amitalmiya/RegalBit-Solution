@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const ForgottenPassword = () => {
   const [email, setEmail] = useState("");
@@ -23,12 +24,13 @@ const ForgottenPassword = () => {
     <div className="flex flex-col items-center justify-center h-screen">
       <form onSubmit={handleSubmit} className="w-80 p-4 border rounded">
         <h2 className="text-xl font-semibold mb-4 text-center">Forgot Password</h2>
+        <Link to="/login" className="mb-4">Remember your password? <span className="text-blue-500 italic">Login here</span></Link>
         <input
           type="email"
           placeholder="Enter your registered email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border p-2 rounded w-full mb-3"
+          className="border p-2 rounded w-full mb-3 mt-3"
           required
         />
         <button

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -8,11 +8,12 @@ const EmailRegistration = () => {
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [otpData, setOtpData] = useState(null);
+  const [otpData, setOtpData] = useState(false);
   const [enteredOtp, setEnteredOtp] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [disableTime, setDisableTime] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const inputs = useRef([]);
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
   const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
@@ -20,6 +21,22 @@ const EmailRegistration = () => {
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   const navigate = useNavigate();
+
+  const handleInput = (e, index) => {
+    const value = e.target.value;
+    if (value && index < inputs.current.length - 1) {
+      inputs.current[index + 1].focus();
+    }
+    setEnteredOtp(
+      (prev) => prev.slice(0, index) + value + prev.slice(index + 1)
+    );
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !e.target.value && index > 0) {
+      inputs.current[index - 1].focus();
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,158 +90,256 @@ const EmailRegistration = () => {
     } catch (error) {
       const errorMsg = error.response?.data?.error || "OTP verification failed";
       alert(errorMsg);
-
-      if (errorMsg.includes("Try again in")) {
-        const match = errorMsg.match(/(\d+)/);
-        if (match) {
-          setDisableTime(parseInt(match[1]) * 60);
-          const timer = setInterval(() => {
-            setDisableTime((prev) => {
-              if (prev <= 1) {
-                clearInterval(timer);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-        }
-      }
-
-      if (errorMsg.includes("Wrong OTP")) {
-        setError(errorMsg);
-      }
-
-      if (errorMsg.includes("permanently blocked")) {
-        setError("Your account has been permanently blocked. Contact admin.");
-      }
     }
   };
 
-  return (
-    <div className="flex items-center justify-center w-full min-h-screen bg-gray-100 py-20">
-      <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white bg-white">
-        <h2 className="text-2xl text-center font-bold underline">
-          Login / Signup with Email Address
-        </h2>
-
-        {!otpData ? (
-          <form className="py-10" onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="italic">Username :</label>
-              <input
-                type="text"
-                placeholder="Enter your Username"
-                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="italic">Email Address :</label>
-              <input
-                type="email"
-                placeholder="example@gmail.com"
-                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="mb-3 relative">
-              <label className="italic">Password :</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter password"
-                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center pr-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[38px] transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-black"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </span>
-            </div>
-
-            {error && <p className="text-red-500 italic mt-1">{error}</p>}
-
-            <button
-              type="submit"
-              className="italic border rounded-[5px] w-full bg-blue-500 py-2 cursor-pointer hover:bg-blue-400 text-white mt-3"
+  if (otpData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white dark:bg-gray-700 shadow-2xl rounded-3xl w-full max-w-md overflow-hidden grid md:grid-cols-1 transform transition-transform duration-300 hover:scale-105 mx-auto">
+          <div className="p-8 text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 400 300"
+              className="mx-auto mb-6 w-48 h-48 animate-pulse"
             >
-              Sign up with OTP
-            </button>
-
-            <div className="mb-3 text-center space-y-2">
-              <Link
-                to="/phone"
-                className="mt-3 italic text-sm block text-blue-800 w-full py-1 underline hover:text-red-500"
+              <circle cx="200" cy="200" r="150" fill="#3B82F6" />
+              <circle cx="200" cy="200" r="120" fill="#FFFFFF" />
+              <circle cx="200" cy="200" r="90" fill="#3B82F6" />
+              <circle cx="200" cy="200" r="60" fill="#FFFFFF" />
+              <text
+                x="200"
+                y="200"
+                textAnchor="middle"
+                fill="#2563EB"
+                fontSize="40"
+                fontWeight="bold"
+                dy=".3em"
               >
-                Login with (+91 IND) Phone Number
-              </Link>
-              <Link
-                to="/"
-                className="underline text-sm text-blue-800 italic block w-full py-1 hover:text-red-500"
-              >
-                Register Yourself
-              </Link>
-            </div>
-          </form>
-        ) : !isVerified ? (
-          <form className="py-10" onSubmit={handleOtpVerify}>
-            <div className="mb-3">
-              <label className="italic">Enter OTP :</label>
-              <input
-                type="text"
-                placeholder="Enter 6-digit OTP"
-                className="border w-full focus:ring-1 focus:ring-black font-sans italic text-center"
-                value={enteredOtp}
-                onChange={(e) => setEnteredOtp(e.target.value)}
-                maxLength={6}
-                required
-                disabled={disableTime > 0}
-              />
-            </div>
+                OTP
+              </text>
+            </svg>
 
-            {error && (
-              <p className="text-red-600 italic text-center mt-2">{error}</p>
-            )}
-
-            {disableTime > 0 && (
-              <p className="text-yellow-600 italic text-center mt-2">
-                Please wait{" "}
-                {Math.floor(disableTime / 60)
-                  .toString()
-                  .padStart(2, "0")}
-                :{(disableTime % 60).toString().padStart(2, "0")} before
-                retrying.
-              </p>
-            )}
-
-            <button
-              type="submit"
-              className={`italic border rounded-[5px] w-full py-2 cursor-pointer ${
-                disableTime > 0
-                  ? "bg-gray-400"
-                  : "bg-green-500 hover:bg-green-400 text-white"
-              }`}
-              disabled={disableTime > 0}
-            >
-              {disableTime > 0 ? "Please Wait..." : "Verify OTP"}
-            </button>
-          </form>
-        ) : (
-          <div className="text-center py-10">
-            <p className="text-green-600 font-bold italic">
-              Email Verified! You are logged in.
+            <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
+              Verify OTP
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              Enter the 6-digit code sent to your email
             </p>
+
+            <form onSubmit={handleOtpVerify}>
+              <div className="flex justify-center space-x-4 mb-6">
+                {[...Array(6)].map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    maxLength="1"
+                    ref={(el) => (inputs.current[i] = el)}
+                    onChange={(e) => handleInput(e, i)}
+                    onKeyDown={(e) => handleKeyDown(e, i)}
+                    className="w-12 h-16 text-center text-2xl border-2 border-blue-500 rounded-xl
+                      focus:outline-none focus:ring-2 focus:ring-blue-500
+                      dark:bg-gray-600 dark:text-white dark:border-blue-400
+                      transition-transform duration-300 hover:scale-110"
+                  />
+                ))}
+              </div>
+
+              <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                Didn’t receive code?{" "}
+                <button
+                  type="button"
+                  className="text-blue-500 hover:underline dark:text-blue-400 transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-500"
+                  onClick={handleSubmit}
+                >
+                  Resend OTP
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600
+                transition-transform duration-300 hover:scale-105
+                dark:bg-blue-600 dark:hover:bg-blue-700"
+              >
+                Verify OTP
+              </button>
+            </form>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
+      <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
+        <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-8">
+          <div>
+            <img
+              src="https://media.licdn.com/dms/image/v2/C510BAQFoBzmJKOzY_A/company-logo_200_200/company-logo_200_200/0/1630619835821/regalbit_solutions_logo?e=2147483647&v=beta&t=N4zeufGLJGf7cpGoaFn2Mn1mR9Gd1HYn-nZqkpaXaa8"
+              className="w-32 mx-auto"
+              alt="Logo"
+            />
+          </div>
+
+          <div className="flex flex-col items-center">
+            <h1 className="text-2xl xl:text-3xl font-extrabold mt-3 mb-3">
+              Create account using Email
+            </h1>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
+            <div className="w-full flex-1 mt-2">
+              <div className="flex flex-col items-center">
+                <button
+                  className="w-full mb-3 max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow"
+                  onClick={() => navigate("/")}
+                >
+                  <div className="bg-white p-1 rounded-full">
+                    <svg
+                      className="w-6 h-6 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M19 21H9a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
+                      <polyline points="17 21 17 13 11 13 11 21" />
+                      <polyline points="12 3 12 8 17 8" />
+                    </svg>
+                  </div>
+                  <span className="ml-4">Register Yourself</span>
+                </button>
+
+                <button
+                  className="w-full mb-3 max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow"
+                  onClick={() => navigate("/phone")}
+                >
+                  <div className="bg-white p-1 rounded-full">
+                    <svg
+                      className="w-6 h-6 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M22 16.92V21a2 2 0 01-2.18 2A19.8 19.8 0 013 5.18 2 2 0 015 3h4.09a1 1 0 011 .75l1.12 4.49a1 1 0 01-.27.95l-2.2 2.2a16 16 0 006.41 6.41l2.2-2.2a1 1 0 01.95-.27l4.49 1.12a1 1 0 01.75 1z" />
+                    </svg>
+                  </div>
+                  <span className="ml-4">Sign Up with Phone Number</span>
+                </button>
+
+                <button
+                  className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow"
+                  onClick={() => navigate("/login")}
+                >
+                  <div className="bg-white p-2 rounded-full">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4 text-gray-800"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+                    </svg>
+                  </div>
+                  <span className="ml-4">Already have an account?</span>
+                </button>
+              </div>
+
+              <div className="my-5 border-b text-center">
+                <div className="leading-none px-2 inline-block text-sm text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2">
+                  Or continue with your username
+                </div>
+              </div>
+
+              {/* Registration Form */}
+              <div className="mx-auto max-w-xs">
+                <form onSubmit={handleSubmit}>
+                  <input
+                    className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    type="text"
+                    placeholder="Username"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                  />
+                  <input
+                    className="w-full px-8 py-4 mt-5 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <div className="relative mt-5">
+                    <input
+                      className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <div
+                      className="absolute right-3 top-4 cursor-pointer text-gray-500"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none cursor-pointer"
+                  >
+                    <svg
+                      className="w-6 h-6 ml-2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                      <circle cx="8.5" cy="7" r="4" />
+                      <path d="M20 8v6M23 11h-6" />
+                    </svg>
+                    <span className="ml-3">Send OTP</span>
+                  </button>
+                </form>
+                <p className="mt-6 text-xs text-gray-600 text-center">
+                  By email address, I agree to the{" "}
+                  <Link
+                    to="#"
+                    className="border-b border-gray-500 border-dotted"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="#"
+                    className="border-b border-gray-500 border-dotted"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
+          <div
+            className="m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat"
+            style={{
+              backgroundImage:
+                "url('https://cdn-jdbmd.nitrocdn.com/yEMHtyTSADNOgebFqynalakIQNihDGqu/assets/images/optimized/rev-80fa023/www.officernd.com/wp-content/uploads/2023/10/word-image-27328-2.png')",
+            }}
+          ></div>
+        </div>
       </div>
     </div>
   );

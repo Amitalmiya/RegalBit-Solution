@@ -1,180 +1,300 @@
 import React, { useState } from "react";
+import { CgProfile } from "react-icons/cg";
+import { IoIosLogOut } from "react-icons/io";
+import { FaUserTimes, FaUserCheck, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
-const Register = () => {
+const Demo = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupType, setPopupType] = useState("");
+  const [formData, setFormData] = useState({
+    userName: "",
+    email: "",
+    phoneNumber: "",
+    role: "",
+    password: "",
+  });
+  const [users, setUsers] = useState([]);
+
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const sidebarItems = [
+    { name: "Dashboard", icon: "📊" },
+    { name: "All Users", icon: "👥" },
+    { name: "Add User", icon: "➕" },
+    { name: "Profile", icon: <CgProfile size={20} /> },
+    { name: "Logout", icon: <IoIosLogOut size={20} /> },
+  ];
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+  const handleClick = (name) => {
+    if (name === "Add User") {
+      setPopupType("addUser");
+      setShowPopup(true);
+    }
   };
 
-  const handleSubmit = async (e) => {
+  const closePopup = () => setShowPopup(false);
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    const { firstName, lastName, email, password, confirmPassword } = formData;
-
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setError("All fields are required");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    try {
-      const res = await axios.post("http://localhost:5000/api/users/register", {
-        firstName,
-        lastName,
-        email,
-        password,
-      });
-
-      if (res.status === 200 || res.status === 201) {
-        setSuccess("Account created successfully!");
-        alert("Registered successfully!");
-        navigate("/login"); // Redirect to login page
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Server error. Try again later.");
-      console.log(err);
-    }
+    const newUser = {
+      id: users.length + 1,
+      userName: formData.userName,
+      email: formData.email,
+      phone: formData.phoneNumber,
+      role: formData.role,
+      status: "active",
+    };
+    setUsers([...users, newUser]);
+    alert("User added successfully!");
+    setFormData({
+      userName: "",
+      email: "",
+      phoneNumber: "",
+      role: "",
+      password: "",
+    });
+    closePopup();
   };
+
+  const toggleUserStatus = (id) => {
+    setUsers(
+      users.map((u) =>
+        u.id === id
+          ? { ...u, status: u.status === "active" ? "inactive" : "active" }
+          : u
+      )
+    );
+  };
+
+  const toggleRole = (id) => {
+    setUsers(
+      users.map((u) =>
+        u.id === id ? { ...u, role: u.role === "admin" ? "user" : "admin" } : u
+      )
+    );
+  };
+
+  const deleteUser = (id) => setUsers(users.filter((u) => u.id !== id));
 
   return (
-    <div className="h-full bg-gray-400 dark:bg-gray-900 min-h-screen flex items-center justify-center">
-      <div className="w-full xl:w-3/4 lg:w-11/12 flex flex-wrap shadow-lg">
-        {/* Left Image */}
-        <div
-          className="hidden lg:block lg:w-5/12 bg-cover rounded-l-lg"
-          style={{
-            backgroundImage: "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRo1p1or7yHxB-dHShQiLBbjxFussSdOFZmyQ&s')",
-          }}
-        ></div>
-
-        {/* Form */}
-        <div className="w-full lg:w-7/12 bg-white dark:bg-gray-700 p-6 lg:rounded-l-none rounded-lg">
-          <h3 className="py-4 text-2xl text-center text-gray-800 dark:text-white font-bold">
-            Create an Account!
-          </h3>
-
-          {error && <p className="text-red-500 text-center mb-3">{error}</p>}
-          {success && <p className="text-green-500 text-center mb-3">{success}</p>}
-
-          <form className="px-4 pt-6 pb-8 mb-4 bg-white dark:bg-gray-800 rounded" onSubmit={handleSubmit}>
-            <div className="mb-4 md:flex md:justify-between">
-              <div className="mb-4 md:mr-2 md:mb-0">
-                <label className="block mb-2 text-sm font-bold text-gray-700 dark:text-white" htmlFor="firstName">
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow focus:outline-none focus:shadow-outline"
-                />
-              </div>
-              <div className="md:ml-2">
-                <label className="block mb-2 text-sm font-bold text-gray-700 dark:text-white" htmlFor="lastName">
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow focus:outline-none focus:shadow-outline"
-                />
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="block mb-2 text-sm font-bold text-gray-700 dark:text-white" htmlFor="email">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow focus:outline-none focus:shadow-outline"
-              />
-            </div>
-
-            <div className="mb-4 md:flex md:justify-between">
-              <div className="mb-4 md:mr-2 md:mb-0">
-                <label className="block mb-2 text-sm font-bold text-gray-700 dark:text-white" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="******************"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow focus:outline-none focus:shadow-outline"
-                />
-              </div>
-              <div className="md:ml-2">
-                <label className="block mb-2 text-sm font-bold text-gray-700 dark:text-white" htmlFor="confirmPassword">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="******************"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 mb-3 text-sm leading-tight text-gray-700 dark:text-white border rounded shadow focus:outline-none focus:shadow-outline"
-                />
-              </div>
-            </div>
-
-            <div className="mb-6 text-center">
+    <div className="flex h-screen bg-gray-100 relative">
+      {/* Sidebar */}
+      <div
+        className={`${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 transform md:flex flex-col w-64 bg-gray-800 transition-transform duration-300 ease-in-out shadow-lg`}
+      >
+        <div className="flex items-center justify-center h-16 bg-gray-900 shadow-md">
+          <span className="text-white font-bold uppercase tracking-wide text-lg">
+            SuperAdmin
+          </span>
+        </div>
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          <nav className="flex-1 px-2 py-4 bg-gray-800">
+            {sidebarItems.map((item, index) => (
               <button
-                type="submit"
-                className="w-full px-4 py-2 font-bold text-white bg-blue-500 rounded-full hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-900 focus:outline-none focus:shadow-outline"
+                key={index}
+                onClick={() => handleClick(item.name)}
+                className="flex items-center px-4 py-3 mt-2 w-full text-gray-100 rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200"
               >
-                Register Account
+                <span className="mr-2">{item.icon}</span>
+                {item.name}
               </button>
-            </div>
-
-            <hr className="mb-6 border-t" />
-
-            <div className="text-center">
-              <a className="inline-block text-sm text-blue-500 dark:text-blue-400 hover:text-blue-800" href="#">
-                Forgot Password?
-              </a>
-            </div>
-            <div className="text-center mt-2">
-              <a className="inline-block text-sm text-blue-500 dark:text-blue-400 hover:text-blue-800" href="/login">
-                Already have an account? Login!
-              </a>
-            </div>
-          </form>
+            ))}
+          </nav>
         </div>
       </div>
+
+      {/* Main content */}
+      <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="flex items-center justify-between h-16 bg-white border-b border-gray-200 px-4">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-gray-500 focus:outline-none focus:text-gray-700 md:hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Welcome to your dashboard!
+          </h1>
+          <div className="flex justify-end">
+            <button
+              onClick={() => navigate("/add-newUser")}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
+            >
+              + Add New User
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+
+          <div className="overflow-x-auto bg-yellow-200 shadow rounded rounded-[15px] mt-4">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-blue-200">
+                <tr>
+                  <th className="px-4 py-2">Id</th>
+                  <th className="px-4 py-2">Username</th>
+                  <th className="px-4 py-2">Email</th>
+                  <th className="px-4 py-2">Phone</th>
+                  <th className="px-4 py-2">Role</th>
+                  <th className="px-4 py-2">Status</th>
+                  <th className="px-4 py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-4 text-gray-500">
+                      No users found
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((u) => (
+                    <tr key={u.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-2">{u.id}</td>
+                      <td className="px-4 py-2">{u.userName}</td>
+                      <td className="px-4 py-2">{u.email}</td>
+                      <td className="px-4 py-2">{u.phone}</td>
+                      <td className="px-4 py-2 capitalize">{u.role}</td>
+                      <td className="px-4 py-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            u.status === "active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {u.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 flex gap-2">
+                        <button
+                          onClick={() => toggleUserStatus(u.id)}
+                          className="px-2 py-1 bg-yellow-200 rounded hover:bg-yellow-300"
+                        >
+                          {u.status === "active" ? (
+                            <FaUserTimes size={16} />
+                          ) : (
+                            <FaUserCheck size={16} />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => toggleRole(u.id)}
+                          className="px-2 py-1 bg-blue-200 rounded hover:bg-blue-300"
+                        >
+                          Role
+                        </button>
+                        <button
+                          onClick={() => deleteUser(u.id)}
+                          className="px-2 py-1 bg-red-200 rounded hover:bg-red-300"
+                        >
+                          <FaTrash size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {showPopup && popupType === "addUser" && (
+        <div className="fixed inset-0 z-50 flex">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-30"
+            onClick={closePopup}
+          ></div>
+          <div className="ml-auto w-96 h-full bg-white shadow-xl p-6 relative z-10 overflow-y-auto transform transition-transform duration-300">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Add New User</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                type="text"
+                name="userName"
+                value={formData.userName}
+                onChange={handleChange}
+                placeholder="User Name"
+                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+              <input
+                type="text"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                placeholder="Phone Number"
+                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              >
+                <option value="">Select Role</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+              </select>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <button
+                  type="button"
+                  onClick={closePopup}
+                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                >
+                  Add User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Register;
+export default Demo;

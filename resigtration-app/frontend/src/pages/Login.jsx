@@ -140,6 +140,11 @@ const Login = () => {
                   </div>
                   <span className="ml-4">Sign Up with Phone Number</span>
                 </button>
+                <div className="mt-2 flex flex-col space-y-2 text-center">
+                  <Link to="/forgotten-password" className="text-blue-500 hover:underline">
+                  Forgotten password
+                  </Link>
+                </div>
               </div>
               <div className="my-5 border-b text-center">
                 <div className="leading-none px-2 inline-block text-sm text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2">

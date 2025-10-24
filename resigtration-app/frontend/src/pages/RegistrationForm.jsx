@@ -280,7 +280,6 @@ const RegistrationForm = () => {
               </div>
             ))}
 
-            {/* Navigation Buttons */}
             <div className="flex justify-between mt-5">
               {step > 0 && <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Back</button>}
               {step < totalSteps - 1 ? (
@@ -292,8 +291,8 @@ const RegistrationForm = () => {
 
             <div className="mt-4 flex flex-col space-y-2 text-center">
               <Link to="/login" className="text-blue-500 hover:underline">Already have an account?</Link>
-              <Link to="/email" className="text-blue-500 hover:underline">Create an account with Phone</Link>
-              <Link to="/phone" className="text-blue-500 hover:underline">Create an account with Email</Link>
+              <Link to="/phone" className="text-blue-500 hover:underline">Create an account with Phone Number</Link>
+              <Link to="/email" className="text-blue-500 hover:underline">Create an account with Email Address</Link>
             </div>
           </form>
 

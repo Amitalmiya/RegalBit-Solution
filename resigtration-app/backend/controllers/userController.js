@@ -35,7 +35,7 @@ const userRegistration = async (req, res) => {
       return res.status(400).json({ message: "User already exists." });
     }
 
-    const formattedDOB = null;
+    let formattedDOB = null;
     const parsedDate = new Date(dateOfBirth);
     if(dateOfBirth) {
       if (!isNaN(parsedDate.getTime())) {
