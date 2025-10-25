@@ -19,7 +19,7 @@ const Profile = () => {
         const token = localStorage.getItem("token");
         if (!token) {
           setError("User not logged in. Please login again.");
-          navigate("/phone");
+          navigate("/login");
           return;
         }
 
@@ -161,7 +161,7 @@ const Profile = () => {
             className="w-1/2 ml-2 py-2 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-400 transition"
             onClick={() => {
               localStorage.removeItem("token");
-              navigate("/phone");
+              navigate("/login");
             }}
           >
             Logout
