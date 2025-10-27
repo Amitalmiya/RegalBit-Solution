@@ -1,5 +1,7 @@
 const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken")
+const nodemailer = require("nodemailer");
 const { generateToken, verifyToken } = require("../utils/tokenHelpers");
 
 
@@ -287,6 +289,173 @@ const userStatus = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { identifier } = req.body; // single input field from frontend
+
+    if (!identifier) {
+      return res.status(400).json({ message: "Please provide a username, email, or phone number" });
+    }
+
+    // Search in main DB
+    const [mainUsers] = await pool.query(
+      "SELECT * FROM users WHERE userName = ? OR email = ? OR phone = ?",
+      [identifier, identifier, identifier]
+    );
+
+    // Search in phone DB (no email column)
+    const [phoneUsers] = await poolPhone.query(
+      "SELECT * FROM users WHERE userName = ? OR phone = ?",
+      [identifier, identifier]
+    );
+
+    // Search in email DB (no phone column)
+    const [emailUsers] = await poolEmail.query(
+      "SELECT * FROM users WHERE userName = ? OR email = ?",
+      [identifier, identifier]
+    );
+
+    const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
+
+    if (!user) {
+      return res.status(404).json({ message: "No account found with provided details" });
+    }
+
+    // Continue with reset logic...
+    const resetToken = jwt.sign(
+      { id: user.id, userName: user.userName },
+      process.env.JWT_SECRET,
+      { expiresIn: "20m" }
+    );
+
+    const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"Support Team" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>Hello ${user.userName},</p>
+        <p>Click the button below to reset your password:</p>
+        <a href="${resetLink}" style="background:#007bff;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Reset Password</a>
+        <p>This link will expire in 20 minutes.</p>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Password reset link sent successfully!" });
+
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword, confirmPassword } = req.body;
+
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Both password fields are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // ✅ Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    const userId = decoded.id;
+
+    // ✅ Check across all DBs
+    const [mainUsers] = await pool.query("SELECT * FROM users WHERE id = ?", [userId]);
+    const [phoneUsers] = await poolPhone.query("SELECT * FROM users WHERE id = ?", [userId]);
+    const [emailUsers] = await poolEmail.query("SELECT * FROM users WHERE id = ?", [userId]);
+
+    let user = null;
+    let source = "";
+
+    if (mainUsers.length) {
+      user = mainUsers[0];
+      source = "main";
+    } else if (phoneUsers.length) {
+      user = phoneUsers[0];
+      source = "phone";
+    } else if (emailUsers.length) {
+      user = emailUsers[0];
+      source = "email";
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Check old passwords from main DB
+    const [oldPasswords] = await pool.query(
+      "SELECT old_password FROM previous_passwords WHERE user_id = ?",
+      [userId]
+    );
+
+    for (let prev of oldPasswords) {
+      const isSame = await bcrypt.compare(newPassword, prev.old_password);
+      if (isSame) {
+        return res.status(400).json({
+          message: "You cannot reuse a previously used password",
+        });
+      }
+    }
+
+    // ✅ Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // ✅ Store current password in previous_passwords before updating
+    if (user.password) {
+      await pool.query(
+        "INSERT INTO previous_passwords (user_id, old_password) VALUES (?, ?)",
+        [userId, user.password]
+      );
+    }
+
+    // ✅ Update in correct DB
+    if (source === "main") {
+      await pool.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
+    } else if (source === "phone") {
+      await poolPhone.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
+    } else if (source === "email") {
+      await poolEmail.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
+    }
+
+    res.status(200).json({ message: "Password reset successfully" });
+
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
 
 
 module.exports = {
@@ -299,4 +468,6 @@ module.exports = {
   updateUser,
   deleteUser,
   userStatus,
+  forgotPassword,
+  resetPassword,
 };

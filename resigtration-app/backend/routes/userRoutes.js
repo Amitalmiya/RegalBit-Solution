@@ -12,7 +12,9 @@ const {
   updateUser,
   deleteUser,
   userStatus,
-  getUserProfile
+  getUserProfile,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/userController");
 
 
@@ -34,5 +36,8 @@ router.get("/dashboard", authenticateToken, isSuperAdmin);
 
 
 router.get("/dashboard", authenticateToken, isAdminOrSuperAdmin);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
 module.exports = router;

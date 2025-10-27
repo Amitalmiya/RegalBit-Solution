@@ -13,6 +13,8 @@ const EmailRegistration = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [disableTime, setDisableTime] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
+  const [strengthLevel, setStrengthLevel] = useState("");
+
   const inputs = useRef([]);
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i;
@@ -91,6 +93,20 @@ const EmailRegistration = () => {
       const errorMsg = error.response?.data?.error || "OTP verification failed";
       alert(errorMsg);
     }
+  };
+
+  const checkPasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[@$!%*?&]/.test(password)) strength++;
+
+    if (strength === 0) return setStrengthLevel("");
+    if (strength === 1) return setStrengthLevel("Easy");
+    if (strength === 2) return setStrengthLevel("Medium");
+    if (strength === 3) return setStrengthLevel("Average");
+    if (strength === 4) return setStrengthLevel("Strong");
   };
 
   if (otpData) {
@@ -257,7 +273,6 @@ const EmailRegistration = () => {
                 </div>
               </div>
 
-              {/* Registration Form */}
               <div className="mx-auto max-w-xs">
                 <form onSubmit={handleSubmit}>
                   <input
@@ -280,7 +295,11 @@ const EmailRegistration = () => {
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setPassword(value);
+                        checkPasswordStrength(value);
+                      }}
                     />
                     <div
                       className="absolute right-3 top-4 cursor-pointer text-gray-500"
@@ -288,6 +307,38 @@ const EmailRegistration = () => {
                     >
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </div>
+
+                    <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${
+                          strengthLevel === "Easy"
+                            ? "bg-red-500 w-1/4"
+                            : strengthLevel === "Medium"
+                            ? "bg-orange-500 w-2/4"
+                            : strengthLevel === "Average"
+                            ? "bg-yellow-400 w-3/4"
+                            : strengthLevel === "Strong"
+                            ? "bg-green-500 w-full"
+                            : "w-0"
+                        }`}
+                      ></div>
+                    </div>
+
+                    {strengthLevel && (
+                      <p
+                        className={`text-sm mt-1 font-semibold ${
+                          strengthLevel === "Easy"
+                            ? "text-red-500"
+                            : strengthLevel === "Medium"
+                            ? "text-orange-500"
+                            : strengthLevel === "Average"
+                            ? "text-yellow-500"
+                            : "text-green-500"
+                        }`}
+                      >
+                        {strengthLevel} Password
+                      </p>
+                    )}
                   </div>
 
                   <button

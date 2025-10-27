@@ -15,6 +15,7 @@ const PhoneRegistration = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [disableTime, setDisableTime] = useState(0);
   const [attemptsLeft, setAttemptsLeft] = useState(3);
+  const [strengthLevel, setStrengthLevel] = useState("");
 
   const navigate = useNavigate();
   const inputs = useRef([]);
@@ -36,7 +37,6 @@ const PhoneRegistration = () => {
     return () => clearInterval(timer);
   }, [disableTime]);
 
-  // Handle OTP request
   const handleRequestOtp = async (e) => {
     e.preventDefault();
 
@@ -65,7 +65,6 @@ const PhoneRegistration = () => {
     }
   };
 
-  // Handle OTP verification
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
 
@@ -105,7 +104,6 @@ const PhoneRegistration = () => {
     }
   };
 
-  // OTP Input handling
   const handleInput = (e, index) => {
     const value = e.target.value.replace(/\D/, "");
     if (!value) return;
@@ -126,6 +124,20 @@ const PhoneRegistration = () => {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
+  };
+
+  const checkPasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[@$!%*?&]/.test(password)) strength++;
+
+    if (strength === 0) return setStrengthLevel("");
+    if (strength === 1) return setStrengthLevel("Easy");
+    if (strength === 2) return setStrengthLevel("Medium");
+    if (strength === 3) return setStrengthLevel("Average");
+    if (strength === 4) return setStrengthLevel("Strong");
   };
 
   if (otpSent) {
@@ -269,14 +281,12 @@ const PhoneRegistration = () => {
             </button>
           </div>
 
-          {/* Divider */}
           <div className="my-5 border-b text-center">
             <span className="leading-none px-2 inline-block text-sm text-gray-600 font-medium bg-white transform translate-y-1/2">
               Or continue with your username
             </span>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleRequestOtp} className="mx-auto max-w-xs">
             <input
               className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
@@ -299,7 +309,10 @@ const PhoneRegistration = () => {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  checkPasswordStrength(e.target.value);
+                }}
               />
               <div
                 className="absolute right-3 top-4 cursor-pointer text-gray-500"
@@ -307,6 +320,37 @@ const PhoneRegistration = () => {
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </div>
+
+              <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    strengthLevel === "Easy"
+                      ? "bg-red-500 w-1/4"
+                      : strengthLevel === "Medium"
+                      ? "bg-orange-500 w-2/4"
+                      : strengthLevel === "Average"
+                      ? "bg-yellow-400 w-3/4"
+                      : strengthLevel === "Strong"
+                      ? "bg-green-500 w-full"
+                      : "w-0"
+                  }`}
+                ></div>
+              </div>
+              {strengthLevel && (
+                <p
+                  className={`text-sm mt-1 font-semibold ${
+                    strengthLevel === "Easy"
+                      ? "text-red-500"
+                      : strengthLevel === "Medium"
+                      ? "text-orange-500"
+                      : strengthLevel === "Average"
+                      ? "text-yellow-500"
+                      : "text-green-500"
+                  }`}
+                >
+                  {strengthLevel} Password
+                </p>
+              )}
             </div>
 
             <button
@@ -330,11 +374,16 @@ const PhoneRegistration = () => {
           </form>
           <p className="mt-6 text-xs text-gray-600 text-center">
             By phone number, I agree to the{" "}
-            <Link to="#" className="border-b border-gray-500 border-dotted">Terms of Service</Link> and{" "}
-            <Link to="#" className="border-b border-gray-500 border-dotted">Privacy Policy</Link>.
+            <Link to="#" className="border-b border-gray-500 border-dotted">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="#" className="border-b border-gray-500 border-dotted">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
-
 
         <div className="flex-1 bg-indigo-100 text-center hidden lg:flex">
           <div

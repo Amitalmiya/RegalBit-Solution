@@ -1,300 +1,337 @@
 import React, { useState } from "react";
-import { CgProfile } from "react-icons/cg";
-import { IoIosLogOut } from "react-icons/io";
-import { FaUserTimes, FaUserCheck, FaTrash } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { RegexPatterns } from "../utils/RegexPatterns";
+import { Link, useNavigate } from "react-router-dom";
+import { FaEyeSlash, FaEye } from "react-icons/fa";
 
-const Demo = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupType, setPopupType] = useState("");
-  const [formData, setFormData] = useState({
-    userName: "",
-    email: "",
-    phoneNumber: "",
-    role: "",
-    password: "",
-  });
-  const [users, setUsers] = useState([]);
+const initialForm = {
+  phone: "",
+  zipCode: "",
+  email: "",
+  password: "",
+  socialSecurityNo: "",
+  dateOfBirth: "",
+  userName: "",
+  websiteUrl: "",
+  creditCardNo: "",
+  driverLicense: "",
+  timeFormat: "",
+  hexaDecimalColorCode: "",
+  gender: "",
+  bloodGroup: "",
+};
+
+const fields = [
+  {
+    name: "phone",
+    label: "Phone Number :",
+    type: "tel",
+    placeholder: "+1-555-123-4567 or (555) 123-4567",
+  },
+  {
+    name: "zipCode",
+    label: "Zip Code :",
+    type: "text",
+    placeholder: "12345 or 12345-6789",
+    maxLength: 10,
+  },
+  {
+    name: "email",
+    label: "Email :",
+    type: "email",
+    placeholder: "example@gmail.com",
+  },
+  {
+    name: "password",
+    label: "Password :",
+    type: "password",
+    placeholder: "Enter a strong password",
+    minLength: 8,
+  },
+  {
+    name: "socialSecurityNo",
+    label: "Social Security Number :",
+    type: "tel",
+    placeholder: "123-45-6789",
+    maxLength: 11,
+  },
+  {
+    name: "dateOfBirth",
+    label: "Date of Birth :",
+    type: "text",
+    placeholder: "MM-DD-YYYY or MM/DD/YYYY",
+    maxLength: 10,
+  },
+  {
+    name: "userName",
+    label: "Username :",
+    type: "text",
+    placeholder: "Enter your name",
+    maxLength: 20,
+  },
+  {
+    name: "websiteUrl",
+    label: "Website Url :",
+    type: "text",
+    placeholder: "https://example.com",
+  },
+  {
+    name: "creditCardNo",
+    label: "Credit Card Number :",
+    type: "text",
+    placeholder: "xxxx-xxxx-xxxx-xxxx",
+    maxLength: 19,
+  },
+  {
+    name: "driverLicense",
+    label: "Driver License :",
+    type: "text",
+    placeholder: "X12X456",
+    maxLength: 12,
+  },
+  {
+    name: "timeFormat",
+    label: "Time :",
+    type: "text",
+    placeholder: "HH:MM AM/PM",
+    maxLength: 9,
+  },
+  {
+    name: "hexaDecimalColorCode",
+    label: "Hexadecimal Color Code :",
+    type: "text",
+    placeholder: "#FFF, #FFFFFF, #F5A52S",
+  },
+  {
+    name: "gender",
+    label: "Gender :",
+    type: "select",
+    options: ["Male", "Female", "Other"],
+  },
+  {
+    name: "bloodGroup",
+    label: "Blood Group :",
+    type: "select",
+    options: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
+  },
+];
+
+const RegistrationForm = () => {
+  const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [step, setStep] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [strength, setStrength] = useState({ label: "", color: "", width: "0%" });
 
   const navigate = useNavigate();
 
-  const sidebarItems = [
-    { name: "Dashboard", icon: "📊" },
-    { name: "All Users", icon: "👥" },
-    { name: "Add User", icon: "➕" },
-    { name: "Profile", icon: <CgProfile size={20} /> },
-    { name: "Logout", icon: <IoIosLogOut size={20} /> },
-  ];
+  // ✅ Password Strength Evaluator
+  const evaluateStrength = (password) => {
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[@$!%*?&#]/.test(password)) score++;
 
-  const handleClick = (name) => {
-    if (name === "Add User") {
-      setPopupType("addUser");
-      setShowPopup(true);
+    switch (score) {
+      case 1:
+        return { label: "Easy", color: "bg-red-500", width: "25%" };
+      case 2:
+        return { label: "Medium", color: "bg-yellow-500", width: "50%" };
+      case 3:
+        return { label: "Average", color: "bg-blue-500", width: "75%" };
+      case 4:
+        return { label: "Strong", color: "bg-green-500", width: "100%" };
+      default:
+        return { label: "", color: "", width: "0%" };
     }
   };
 
-  const closePopup = () => setShowPopup(false);
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
 
-  const handleSubmit = (e) => {
+    if (name === "password") {
+      setStrength(evaluateStrength(value));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!RegexPatterns.phone.test(form.phone)) newErrors.phone = "Invalid Phone Number";
+    if (!RegexPatterns.zipCode.test(form.zipCode)) newErrors.zipCode = "Invalid Zip Code";
+    if (!RegexPatterns.email.test(form.email)) newErrors.email = "Invalid Email";
+    if (!RegexPatterns.password.test(form.password)) newErrors.password = "Invalid Password";
+    if (!RegexPatterns.socialSecurityNo.test(form.socialSecurityNo))
+      newErrors.socialSecurityNo = "Invalid Social Security No";
+    if (!RegexPatterns.dateOfBirth.test(form.dateOfBirth))
+      newErrors.dateOfBirth = "Invalid Date of Birth";
+    if (!RegexPatterns.userName.test(form.userName)) newErrors.userName = "Invalid Username";
+    if (!RegexPatterns.websiteUrl.test(form.websiteUrl))
+      newErrors.websiteUrl = "Invalid Website URL";
+    if (!RegexPatterns.creditCardNo.test(form.creditCardNo))
+      newErrors.creditCardNo = "Invalid Credit Card Number";
+    if (!RegexPatterns.driverLicense.test(form.driverLicense))
+      newErrors.driverLicense = "Invalid Driver License";
+    if (!RegexPatterns.timeFormat.test(form.timeFormat))
+      newErrors.timeFormat = "Invalid Time Format";
+    if (!RegexPatterns.hexaDecimalColorCode.test(form.hexaDecimalColorCode))
+      newErrors.hexaDecimalColorCode = "Invalid Hexadecimal Color Code";
+    if (!form.gender) newErrors.gender = "Gender is required";
+    if (!form.bloodGroup) newErrors.bloodGroup = "Blood Group is required";
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      alert(Object.values(newErrors)[0]);
+      return false;
+    }
+    return true;
+  };
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const newUser = {
-      id: users.length + 1,
-      userName: formData.userName,
-      email: formData.email,
-      phone: formData.phoneNumber,
-      role: formData.role,
-      status: "active",
-    };
-    setUsers([...users, newUser]);
-    alert("User added successfully!");
-    setFormData({
-      userName: "",
-      email: "",
-      phoneNumber: "",
-      role: "",
-      password: "",
-    });
-    closePopup();
+    if (!validateForm()) return;
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/users", form);
+      alert("Data submitted successfully");
+      setForm(initialForm);
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration Error:", error);
+      alert(error.response?.data?.message || "Server Error");
+    }
   };
 
-  const toggleUserStatus = (id) => {
-    setUsers(
-      users.map((u) =>
-        u.id === id
-          ? { ...u, status: u.status === "active" ? "inactive" : "active" }
-          : u
-      )
-    );
-  };
-
-  const toggleRole = (id) => {
-    setUsers(
-      users.map((u) =>
-        u.id === id ? { ...u, role: u.role === "admin" ? "user" : "admin" } : u
-      )
-    );
-  };
-
-  const deleteUser = (id) => setUsers(users.filter((u) => u.id !== id));
+  const fieldsPerStep = 4;
+  const totalSteps = Math.ceil(fields.length / fieldsPerStep);
+  const currentFields = fields.slice(step * fieldsPerStep, (step + 1) * fieldsPerStep);
 
   return (
-    <div className="flex h-screen bg-gray-100 relative">
-      {/* Sidebar */}
-      <div
-        className={`${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 transform md:flex flex-col w-64 bg-gray-800 transition-transform duration-300 ease-in-out shadow-lg`}
-      >
-        <div className="flex items-center justify-center h-16 bg-gray-900 shadow-md">
-          <span className="text-white font-bold uppercase tracking-wide text-lg">
-            SuperAdmin
-          </span>
-        </div>
-        <div className="flex flex-col flex-1 overflow-y-auto">
-          <nav className="flex-1 px-2 py-4 bg-gray-800">
-            {sidebarItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => handleClick(item.name)}
-                className="flex items-center px-4 py-3 mt-2 w-full text-gray-100 rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200"
-              >
-                <span className="mr-2">{item.icon}</span>
-                {item.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-col flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between h-16 bg-white border-b border-gray-200 px-4">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-gray-500 focus:outline-none focus:text-gray-700 md:hidden"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-          <h1 className="text-3xl font-bold text-gray-800">
-            Welcome to your dashboard!
-          </h1>
-          <div className="flex justify-end">
-            <button
-              onClick={() => navigate("/add-newUser")}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
-            >
-              + Add New User
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-
-          <div className="overflow-x-auto bg-yellow-200 shadow rounded rounded-[15px] mt-4">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-blue-200">
-                <tr>
-                  <th className="px-4 py-2">Id</th>
-                  <th className="px-4 py-2">Username</th>
-                  <th className="px-4 py-2">Email</th>
-                  <th className="px-4 py-2">Phone</th>
-                  <th className="px-4 py-2">Role</th>
-                  <th className="px-4 py-2">Status</th>
-                  <th className="px-4 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-4 text-gray-500">
-                      No users found
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((u) => (
-                    <tr key={u.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{u.id}</td>
-                      <td className="px-4 py-2">{u.userName}</td>
-                      <td className="px-4 py-2">{u.email}</td>
-                      <td className="px-4 py-2">{u.phone}</td>
-                      <td className="px-4 py-2 capitalize">{u.role}</td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            u.status === "active"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {u.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <button
-                          onClick={() => toggleUserStatus(u.id)}
-                          className="px-2 py-1 bg-yellow-200 rounded hover:bg-yellow-300"
-                        >
-                          {u.status === "active" ? (
-                            <FaUserTimes size={16} />
-                          ) : (
-                            <FaUserCheck size={16} />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => toggleRole(u.id)}
-                          className="px-2 py-1 bg-blue-200 rounded hover:bg-blue-300"
-                        >
-                          Role
-                        </button>
-                        <button
-                          onClick={() => deleteUser(u.id)}
-                          className="px-2 py-1 bg-red-200 rounded hover:bg-red-300"
-                        >
-                          <FaTrash size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {showPopup && popupType === "addUser" && (
-        <div className="fixed inset-0 z-50 flex">
+    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+      <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex flex-1">
+        <div className="flex-1 bg-indigo-100 hidden lg:flex justify-center items-center">
           <div
-            className="absolute inset-0 bg-black bg-opacity-30"
-            onClick={closePopup}
-          ></div>
-          <div className="ml-auto w-96 h-full bg-white shadow-xl p-6 relative z-10 overflow-y-auto transform transition-transform duration-300">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Add New User</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                type="text"
-                name="userName"
-                value={formData.userName}
-                onChange={handleChange}
-                placeholder="User Name"
-                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
-              <input
-                type="text"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                placeholder="Phone Number"
-                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              >
-                <option value="">Select Role</option>
-                <option value="admin">Admin</option>
-                <option value="user">User</option>
-              </select>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Password"
-                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
-              <div className="flex justify-end space-x-2 mt-2">
+            className="m-12 xl:m-16 w-full h-full bg-contain bg-center bg-no-repeat"
+            style={{
+              backgroundImage:
+                "url('https://img.freepik.com/free-vector/freelance-remote-workers-flat-composition-with-domestic-scenery-woman-working-home-with-laptop_1284-59822.jpg?semt=ais_incoming&w=740&q=80')",
+            }}
+          />
+        </div>
+
+        <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-8">
+          <h1 className="text-2xl xl:text-3xl font-extrabold mb-6 text-center text-indigo-700">
+            Register a new account
+          </h1>
+
+          <form onSubmit={handleFormSubmit} className="mx-auto max-w-xs">
+            {currentFields.map((field) => (
+              <div className="mb-4 relative" key={field.name}>
+                <label className="block mb-1 font-medium">{field.label}</label>
+
+                {field.type === "select" ? (
+                  <select
+                    name={field.name}
+                    value={form[field.name]}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white"
+                  >
+                    <option value="">Select {field.label}</option>
+                    {field.options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <>
+                    <input
+                      name={field.name}
+                      type={
+                        field.name === "password"
+                          ? showPassword
+                            ? "text"
+                            : "password"
+                          : field.type
+                      }
+                      placeholder={field.placeholder}
+                      value={form[field.name]}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white"
+                    />
+                    {field.name === "password" && (
+                      <>
+                        <span
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-9 cursor-pointer text-gray-600 hover:text-gray-900"
+                        >
+                          {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                        </span>
+
+                        {/* ✅ Password Strength Meter */}
+                        {strength.label && (
+                          <div className="mt-2">
+                            <div className="w-full h-2 bg-gray-200 rounded-full">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${strength.color}`}
+                                style={{ width: strength.width }}
+                              ></div>
+                            </div>
+                            <p
+                              className={`text-sm mt-1 text-center ${
+                                strength.label === "Strong"
+                                  ? "text-green-600"
+                                  : strength.label === "Average"
+                                  ? "text-blue-600"
+                                  : strength.label === "Medium"
+                                  ? "text-yellow-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              Strength: <b>{strength.label}</b>
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+
+            <div className="flex justify-between mt-5">
+              {step > 0 && (
                 <button
                   type="button"
-                  onClick={closePopup}
-                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+                  onClick={() => setStep(step - 1)}
+                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
                 >
-                  Cancel
+                  Back
                 </button>
+              )}
+              {step < totalSteps - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep(step + 1)}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 ml-auto"
+                >
+                  Next
+                </button>
+              ) : (
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-auto"
                 >
-                  Add User
+                  Register
                 </button>
-              </div>
-            </form>
-          </div>
+              )}
+            </div>
+          </form>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default Demo;
+export default RegistrationForm;

@@ -125,6 +125,33 @@ const RegistrationForm = () => {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const [strength, setStrength] = useState({
+    label: "",
+    color: "",
+    width: "0%",
+  });
+
+  const evaluateStrength = (password) => {
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[@$!%*?&#]/.test(password)) score++;
+
+    switch (score) {
+      case 1:
+        return { label: "Easy", color: "bg-red-500", width: "25%" };
+      case 2:
+        return { label: "Medium", color: "bg-yellow-500", width: "50%" };
+      case 3:
+        return { label: "Average", color: "bg-blue-500", width: "75%" };
+      case 4:
+        return { label: "Strong", color: "bg-green-500", width: "100%" };
+      default:
+        return { label: "", color: "", width: "0%" };
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -184,6 +211,10 @@ const RegistrationForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "password") {
+      setStrength(evaluateStrength(value));
+    }
   };
 
   const navigate = useNavigate();
@@ -226,80 +257,174 @@ const RegistrationForm = () => {
     (step + 1) * fieldsPerStep
   );
 
-   return (
+  return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center">
       <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex flex-1">
         <div className="flex-1 bg-indigo-100 hidden lg:flex justify-center items-center">
           <div
             className="m-12 xl:m-16 w-full h-full bg-contain bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('https://img.freepik.com/free-vector/freelance-remote-workers-flat-composition-with-domestic-scenery-woman-working-home-with-laptop_1284-59822.jpg?semt=ais_incoming&w=740&q=80')" }}
+            style={{
+              backgroundImage:
+                "url('https://img.freepik.com/free-vector/freelance-remote-workers-flat-composition-with-domestic-scenery-woman-working-home-with-laptop_1284-59822.jpg?semt=ais_incoming&w=740&q=80')",
+            }}
           />
         </div>
         <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-8">
-          <img src="https://media.licdn.com/dms/image/v2/C510BAQFoBzmJKOzY_A/company-logo_200_200/company-logo_200_200/0/1630619835821/regalbit_solutions_logo?e=2147483647&v=beta&t=N4zeufGLJGf7cpGoaFn2Mn1mR9Gd1HYn-nZqkpaXaa8" alt="Logo" className="w-28 mx-auto mb-4" />
-          <h1 className="text-2xl xl:text-3xl font-extrabold mb-6 text-center">Register a new account</h1>
+          <img
+            src="https://media.licdn.com/dms/image/v2/C510BAQFoBzmJKOzY_A/company-logo_200_200/company-logo_200_200/0/1630619835821/regalbit_solutions_logo?e=2147483647&v=beta&t=N4zeufGLJGf7cpGoaFn2Mn1mR9Gd1HYn-nZqkpaXaa8"
+            alt="Logo"
+            className="w-28 mx-auto mb-4"
+          />
+          <h1 className="text-2xl xl:text-3xl font-extrabold mb-6 text-center">
+            Register a new account
+          </h1>
 
           <div className="flex justify-center mb-6 space-x-2">
             {Array.from({ length: totalSteps }).map((_, index) => (
-              <div key={index} className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${index === step ? "bg-blue-500 text-white" : index < step ? "bg-green-400 text-white" : "bg-gray-300 text-gray-600"}`}>
+              <div
+                key={index}
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${
+                  index === step
+                    ? "bg-blue-500 text-white"
+                    : index < step
+                    ? "bg-green-400 text-white"
+                    : "bg-gray-300 text-gray-600"
+                }`}
+              >
                 {index + 1}
               </div>
             ))}
           </div>
-            
+
           <form onSubmit={handleFormSubmit} className="mx-auto max-w-xs">
             {currentFields.map((field) => (
               <div className="mb-4 relative" key={field.name}>
-                <label className="block mb-1">{field.label}</label>
+                <label className="block mb-1 font-medium">{field.label}</label>
 
                 {field.type === "select" ? (
-                  <select name={field.name} value={form[field.name]} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white">
+                  <select
+                    name={field.name}
+                    value={form[field.name]}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white"
+                  >
                     <option value="">Select {field.label}</option>
-                    {field.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                    {field.options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
                 ) : (
                   <>
                     <input
                       name={field.name}
-                      type={field.name === "password" ? (showPassword ? "text" : "password") : field.type}
+                      type={
+                        field.name === "password"
+                          ? showPassword
+                            ? "text"
+                            : "password"
+                          : field.type
+                      }
                       placeholder={field.placeholder}
                       value={form[field.name]}
                       onChange={handleChange}
                       className="w-full px-4 py-2 border rounded-lg bg-gray-100 text-sm focus:outline-none focus:bg-white"
                     />
                     {field.name === "password" && (
-                      <span
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-9 cursor-pointer text-gray-600 hover:text-gray-900"
-                      >
-                        {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
-                      </span>
+                      <>
+                        <span
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-9 cursor-pointer text-gray-600 hover:text-gray-900"
+                        >
+                          {showPassword ? (
+                            <FaEyeSlash size={20} />
+                          ) : (
+                            <FaEye size={20} />
+                          )}
+                        </span>
+
+                        {/* ✅ Password Strength Meter */}
+                        {strength.label && (
+                          <div className="mt-2">
+                            <div className="w-full h-2 bg-gray-200 rounded-full">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${strength.color}`}
+                                style={{ width: strength.width }}
+                              ></div>
+                            </div>
+                            <p
+                              className={`text-sm mt-1 text-center ${
+                                strength.label === "Strong"
+                                  ? "text-green-600"
+                                  : strength.label === "Average"
+                                  ? "text-blue-600"
+                                  : strength.label === "Medium"
+                                  ? "text-yellow-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              Strength: <b>{strength.label}</b>
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </>
                 )}
               </div>
             ))}
-
             <div className="flex justify-between mt-5">
-              {step > 0 && <button type="button" onClick={() => setStep(step - 1)} className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Back</button>}
+              {step > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(step - 1)}
+                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                >
+                  Back
+                </button>
+              )}
               {step < totalSteps - 1 ? (
-                <button type="button" onClick={() => setStep(step + 1)} className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 ml-auto">Next</button>
+                <button
+                  type="button"
+                  onClick={() => setStep(step + 1)}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 ml-auto"
+                >
+                  Next
+                </button>
               ) : (
-                <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-auto">Register</button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-auto"
+                >
+                  Register
+                </button>
               )}
             </div>
 
             <div className="mt-4 flex flex-col space-y-2 text-center">
-              <Link to="/login" className="text-blue-500 hover:underline">Already have an account?</Link>
-              <Link to="/phone" className="text-blue-500 hover:underline">Create an account with Phone Number</Link>
-              <Link to="/email" className="text-blue-500 hover:underline">Create an account with Email Address</Link>
+              <Link to="/login" className="text-blue-500 hover:underline">
+                Already have an account?
+              </Link>
+              <Link to="/phone" className="text-blue-500 hover:underline">
+                Create an account with Phone Number
+              </Link>
+              <Link to="/email" className="text-blue-500 hover:underline">
+                Create an account with Email Address
+              </Link>
             </div>
           </form>
 
           <p className="mt-6 text-xs text-gray-600 text-center">
             By registering, I agree to the{" "}
-            <Link to="#" className="border-b border-gray-500 border-dotted">Terms of Service</Link> and{" "}
-            <Link to="#" className="border-b border-gray-500 border-dotted">Privacy Policy</Link>.
+            <Link to="#" className="border-b border-gray-500 border-dotted">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="#" className="border-b border-gray-500 border-dotted">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
       </div>

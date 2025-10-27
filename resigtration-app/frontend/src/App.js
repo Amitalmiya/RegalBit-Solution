@@ -17,9 +17,9 @@ import AddNew from "./components/AddNew";
 import ForgottenPassword from "./components/ForgottenPassword";
 import Demo from "./pages/Demo";
 import { useEffect, useState } from "react";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
-  
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
 
   const [role, setRole] = useState(localStorage.getItem("role"));
@@ -33,13 +33,12 @@ function App() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-
   return (
     <>
       <BrowserRouter>
-      {isLoggedIn && role === 'user' && (
-        <NavbarMain onLogout={()=> setIsLoggedIn(false)} />
-      )}
+        {isLoggedIn && role === "user" && (
+          <NavbarMain onLogout={() => setIsLoggedIn(false)} />
+        )}
         <Routes>
           <Route path="/" element={<RegistrationForm />} />
           <Route path="demo" element={<Demo />} />
@@ -51,6 +50,7 @@ function App() {
           <Route path="/view/:id" element={<ViewUsers />} />
           <Route path="*" element={<NotFound />} />
           <Route path="forgotten-password" element={<ForgottenPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route
             path="/home"
             element={
@@ -91,6 +91,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
         </Routes>
       </BrowserRouter>
     </>
