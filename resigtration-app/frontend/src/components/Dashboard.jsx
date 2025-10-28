@@ -121,7 +121,6 @@ const DashBoard = () => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
-  // Fetch users
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -138,13 +137,11 @@ const DashBoard = () => {
     }
   }, [token]);
 
-  // Fetch logged-in user's profile
   const fetchProfile = useCallback(async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/users/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // setProfile(res.data);
     } catch (error) {
       console.error("Error fetching profile:", error);
     }
@@ -155,7 +152,6 @@ const DashBoard = () => {
     if (activePage === "profile") fetchProfile();
   }, [activePage, fetchUsers, fetchProfile]);
 
-  // Sidebar click handler
   const handleClick = (item) => {
     if (item.key === "logout") {
       if (window.confirm("Are you sure you want to logout?")) {
@@ -164,20 +160,6 @@ const DashBoard = () => {
       }
     } else {
       setActivePage(item.key);
-    }
-  };
-
-  // User Actions
-  const toggleUserStatus = async (id) => {
-    try {
-      await axios.patch(
-        `http://localhost:5000/api/users/toggle-status/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchUsers();
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -287,7 +269,6 @@ const DashBoard = () => {
     }
   };
 
-  // Render All Users Table
   const renderAllUsers = () => (
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
@@ -295,7 +276,6 @@ const DashBoard = () => {
           All Users
         </h2>
 
-        {/* Only superadmin can see the Add User button */}
         {user.role === "superadmin" && (
           <button
             onClick={() => navigate("/add-newUser")}
@@ -406,7 +386,6 @@ const DashBoard = () => {
                           )}
                         </button>
 
-                        {/* Show Change Role only if logged-in user is superadmin */}
                         {user.role === "superadmin" && (
                           <button
                             onClick={() => toggleRole(u.id)}
@@ -440,7 +419,6 @@ const DashBoard = () => {
     </div>
   );
 
-  // Render Add User Form
   const renderAddUser = () => (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
       <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-8">
@@ -565,7 +543,6 @@ const DashBoard = () => {
     </div>
   );
 
-  // Render Profile Page
   const renderProfile = () => (
     <div className="flex justify-center item-start py-16 bg-gradient-to-br from-blue-100 via-gray-50 to-gray-100 min-h-screen">
       <div className="bg-white shadow-xl rounded-3xl w-full max-w-lg p-8 border border-gray-200 transition-all hover:shadow-2xl">
@@ -618,7 +595,6 @@ const DashBoard = () => {
     </div>
   );
 
-  // Render content based on activePage
   const renderContent = () => {
     const mainUsers = users.filter((u) => u.source === "main");
     const phoneUsers = users.filter((u) => u.source === "phone");
@@ -635,36 +611,37 @@ const DashBoard = () => {
       default:
         return (
           <div className="p-6 bg-gray-100 min-h-screen">
-          <h2 className="text-3xl font-bold mb-6 text-center italic underline text-gray-800">
-            Welcome to your Dashboard
-          </h2>
+            <h2 className="text-3xl font-bold mb-6 text-center italic underline text-gray-800">
+              Welcome to your Dashboard
+            </h2>
 
-          <div className="flex justify-center gap-6 mb-8 flex-wrap">
-            <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
-              <h3 className="text-gray-600 italic">Registered Users</h3>
-              <p className="text-2xl font-bold">{mainUsers.length}</p>
-            </div>
-            <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
-              <h3 className="text-gray-600 italic">Phone Users</h3>
-              <p className="text-2xl font-bold">{phoneUsers.length}</p>
-            </div>
-            <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
-              <h3 className="text-gray-600 italic">Email Users</h3>
-              <p className="text-2xl font-bold">{emailUsers.length}</p>
-            </div>
-            <div className="bg-green-100 shadow-md rounded-lg p-4 w-48 text-center border border-green-200">
-              <h3 className="text-green-700 italic">Total Users</h3>
-              <p className="text-2xl font-bold text-green-800">{totalUsers}</p>
+            <div className="flex justify-center gap-6 mb-8 flex-wrap">
+              <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
+                <h3 className="text-gray-600 italic">Registered Users</h3>
+                <p className="text-2xl font-bold">{mainUsers.length}</p>
+              </div>
+              <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
+                <h3 className="text-gray-600 italic">Phone Users</h3>
+                <p className="text-2xl font-bold">{phoneUsers.length}</p>
+              </div>
+              <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
+                <h3 className="text-gray-600 italic">Email Users</h3>
+                <p className="text-2xl font-bold">{emailUsers.length}</p>
+              </div>
+              <div className="bg-green-100 shadow-md rounded-lg p-4 w-48 text-center border border-green-200">
+                <h3 className="text-green-700 italic">Total Users</h3>
+                <p className="text-2xl font-bold text-green-800">
+                  {totalUsers}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
         );
     }
   };
 
   return (
     <div className="flex h-screen bg-gray-100 relative">
-      {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -677,21 +654,22 @@ const DashBoard = () => {
         </div>
         <div className="flex flex-col flex-1 overflow-y-auto">
           <nav className="flex-1 px-2 py-4 bg-gray-800">
-            {sidebarItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => handleClick(item)}
-                className="flex items-center px-4 py-3 mt-2 w-full text-gray-100 rounded-lg hover:bg-blue-600 hover:text-white transition-colors duration-200"
-              >
-                <span className="mr-2">{item.icon}</span>
-                {item.name}
-              </button>
-            ))}
+            <ul>
+              {sidebarItems.map((item) => (
+                <li
+                  key={item.key}
+                  onClick={() => handleClick(item)}
+                  className="flex items-center gap-3 px-4 py-3 mt-2 text-gray-100 rounded-lg cursor-pointer hover:bg-blue-600 hover:text-white transition-colors duration-200"
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </li>
+              ))}
+            </ul>
           </nav>
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex flex-col flex-1 overflow-y-auto">
         {renderContent()}
       </div>

@@ -1,9 +1,8 @@
 const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const { generateToken, verifyToken } = require("../utils/tokenHelpers");
-
 
 function formatTimeToMySQL(timeStr) {
   if (!timeStr) return null;
@@ -16,13 +15,24 @@ function formatTimeToMySQL(timeStr) {
     .padStart(2, "0")}:00`;
 }
 
-
 const userRegistration = async (req, res) => {
   try {
     const {
-      userName, email, phone, dateOfBirth, socialSecurityNo,
-      driverLicense, gender, bloodGroup, zipCode, websiteUrl,
-      creditCardNo, timeFormat, hexaDecimalColorCode, password, role,
+      userName,
+      email,
+      phone,
+      dateOfBirth,
+      socialSecurityNo,
+      driverLicense,
+      gender,
+      bloodGroup,
+      zipCode,
+      websiteUrl,
+      creditCardNo,
+      timeFormat,
+      hexaDecimalColorCode,
+      password,
+      role,
     } = req.body;
 
     if (!userName || !email) {
@@ -39,13 +49,13 @@ const userRegistration = async (req, res) => {
 
     let formattedDOB = null;
     const parsedDate = new Date(dateOfBirth);
-    if(dateOfBirth) {
+    if (dateOfBirth) {
       if (!isNaN(parsedDate.getTime())) {
         formattedDOB = parsedDate.toISOString().split("T")[0];
       }
     }
 
-    const validRoles = ["user", "admin"]
+    const validRoles = ["user", "admin"];
     const userRole = validRoles.includes(role) ? role : "user";
 
     const password_hash = await bcrypt.hash(password, 10);
@@ -58,21 +68,21 @@ const userRegistration = async (req, res) => {
       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userName,
-        email, 
-        phone, 
-        formattedDOB || null, 
-        socialSecurityNo || null, 
+        email,
+        phone,
+        formattedDOB || null,
+        socialSecurityNo || null,
         driverLicense || null,
-        gender || null, 
-        bloodGroup || null, 
-        zipCode || null, 
-        websiteUrl || null, 
-        creditCardNo || null, 
+        gender || null,
+        bloodGroup || null,
+        zipCode || null,
+        websiteUrl || null,
+        creditCardNo || null,
         timeFormat || null,
-        hexaDecimalColorCode || null, 
-        password, 
-        password_hash, 
-        userRole
+        hexaDecimalColorCode || null,
+        password,
+        password_hash,
+        userRole,
       ]
     );
 
@@ -89,7 +99,6 @@ const userRegistration = async (req, res) => {
   }
 };
 
-
 const loginUser = async (req, res) => {
   try {
     const { userName, password } = req.body;
@@ -97,14 +106,25 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE userName = ?`, [userName]);
-    const [phoneUsers] = await poolPhone.query(`SELECT * FROM users WHERE userName = ?`, [userName]);
-    const [emailUsers] = await poolEmail.query(`SELECT * FROM users WHERE userName = ?`, [userName]);
+    const [mainUsers] = await pool.query(
+      `SELECT * FROM users WHERE userName = ?`,
+      [userName]
+    );
+    const [phoneUsers] = await poolPhone.query(
+      `SELECT * FROM users WHERE userName = ?`,
+      [userName]
+    );
+    const [emailUsers] = await poolEmail.query(
+      `SELECT * FROM users WHERE userName = ?`,
+      [userName]
+    );
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
 
-    if (!user) return res.status(401).json({ message: "Invalid username or password." });
+    if (!user)
+      return res.status(401).json({ message: "Invalid username or password." });
     const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) return res.status(401).json({ message: "Invalid username or password." });
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid username or password." });
 
     const token = generateToken(user.id, user.role);
 
@@ -119,14 +139,21 @@ const loginUser = async (req, res) => {
   }
 };
 
-
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE id = ?`, [userId]);
-    const [phoneUsers] = await poolPhone.query(`SELECT id, userName, phone FROM users WHERE id = ?`, [userId]);
-    const [emailUsers] = await poolEmail.query(`SELECT id, userName, email FROM users WHERE id = ?`, [userId]);
+    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE id = ?`, [
+      userId,
+    ]);
+    const [phoneUsers] = await poolPhone.query(
+      `SELECT id, userName, phone FROM users WHERE id = ?`,
+      [userId]
+    );
+    const [emailUsers] = await poolEmail.query(
+      `SELECT id, userName, email FROM users WHERE id = ?`,
+      [userId]
+    );
 
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
     if (!user) return res.status(404).json({ message: "User not found." });
@@ -138,17 +165,25 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-
 const getUserFromToken = async (token) => {
   try {
     if (!token) return { success: false, message: "Token missing" };
     const trimmedToken = token.replace(/^Bearer\s+/i, "").trim();
     const decoded = verifyToken(trimmedToken);
-    if (!decoded) return { success: false, message: "Invalid or expired token" };
+    if (!decoded)
+      return { success: false, message: "Invalid or expired token" };
 
-    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE id = ?`, [decoded.id]);
-    const [phoneUsers] = await poolPhone.query(`SELECT * FROM users WHERE id = ?`, [decoded.id]);
-    const [emailUsers] = await poolEmail.query(`SELECT * FROM users WHERE id = ?`, [decoded.id]);
+    const [mainUsers] = await pool.query(`SELECT * FROM users WHERE id = ?`, [
+      decoded.id,
+    ]);
+    const [phoneUsers] = await poolPhone.query(
+      `SELECT * FROM users WHERE id = ?`,
+      [decoded.id]
+    );
+    const [emailUsers] = await poolEmail.query(
+      `SELECT * FROM users WHERE id = ?`,
+      [decoded.id]
+    );
 
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
     if (!user) return { success: false, message: "User not found" };
@@ -159,7 +194,6 @@ const getUserFromToken = async (token) => {
     return { success: false, message: "Invalid or expired token" };
   }
 };
-
 
 const allUsers = async (req, res) => {
   try {
@@ -172,25 +206,50 @@ const allUsers = async (req, res) => {
     const [emailUsers] = await poolEmail.query("SELECT * FROM users");
 
     const allUsers = [
-      ...(mainUsers?.map(u => ({ ...u, source: "main", uniqueId: `main-${u.id}` })) || []),
-      ...(phoneUsers?.map(u => ({ ...u, source: "phone", uniqueId: `phone-${u.id}` })) || []),
-      ...(emailUsers?.map(u => ({ ...u, source: "email", uniqueId: `email-${u.id}` })) || []),
+      ...(mainUsers?.map((u) => ({
+        ...u,
+        source: "main",
+        uniqueId: `main-${u.id}`,
+      })) || []),
+      ...(phoneUsers?.map((u) => ({
+        ...u,
+        source: "phone",
+        uniqueId: `phone-${u.id}`,
+      })) || []),
+      ...(emailUsers?.map((u) => ({
+        ...u,
+        source: "email",
+        uniqueId: `email-${u.id}`,
+      })) || []),
     ];
 
-    res.status(200).json({ message: "All users fetched successfully", totalUsers: allUsers.length, allUsers });
+    res
+      .status(200)
+      .json({
+        message: "All users fetched successfully",
+        totalUsers: allUsers.length,
+        allUsers,
+      });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error", error: err });
   }
 };
 
-
 const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const [mainUsers] = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
-    const [phoneUsers] = await poolPhone.query("SELECT * FROM users WHERE id = ?", [id]);
-    const [emailUsers] = await poolEmail.query("SELECT * FROM users WHERE id = ?", [id]);
+    const [mainUsers] = await pool.query("SELECT * FROM users WHERE id = ?", [
+      id,
+    ]);
+    const [phoneUsers] = await poolPhone.query(
+      "SELECT * FROM users WHERE id = ?",
+      [id]
+    );
+    const [emailUsers] = await poolEmail.query(
+      "SELECT * FROM users WHERE id = ?",
+      [id]
+    );
 
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -202,21 +261,36 @@ const getUserById = async (req, res) => {
   }
 };
 
-
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const fields = req.body;
-    if (!Object.keys(fields).length) return res.status(400).json({ message: "No fields to update" });
+    if (!Object.keys(fields).length)
+      return res.status(400).json({ message: "No fields to update" });
 
-    const setClause = Object.keys(fields).map(field => `${field} = ?`).join(", ");
+    const setClause = Object.keys(fields)
+      .map((field) => `${field} = ?`)
+      .join(", ");
     const values = [...Object.values(fields), id];
 
-    const [resultMain] = await pool.query(`UPDATE users SET ${setClause} WHERE id = ?`, values);
-    const [resultPhone] = await poolPhone.query(`UPDATE users SET ${setClause} WHERE id = ?`, values);
-    const [resultEmail] = await poolEmail.query(`UPDATE users SET ${setClause} WHERE id = ?`, values);
+    const [resultMain] = await pool.query(
+      `UPDATE users SET ${setClause} WHERE id = ?`,
+      values
+    );
+    const [resultPhone] = await poolPhone.query(
+      `UPDATE users SET ${setClause} WHERE id = ?`,
+      values
+    );
+    const [resultEmail] = await poolEmail.query(
+      `UPDATE users SET ${setClause} WHERE id = ?`,
+      values
+    );
 
-    if (resultMain.affectedRows === 0 && resultPhone.affectedRows === 0 && resultEmail.affectedRows === 0) {
+    if (
+      resultMain.affectedRows === 0 &&
+      resultPhone.affectedRows === 0 &&
+      resultEmail.affectedRows === 0
+    ) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -227,16 +301,29 @@ const updateUser = async (req, res) => {
   }
 };
 
-
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const [resultMain] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
-    const [resultPhone] = await poolPhone.query("DELETE FROM users WHERE id = ?", [id]);
-    const [resultEmail] = await poolEmail.query("DELETE FROM users WHERE id = ?", [id]);
+    const [resultMain] = await pool.query("DELETE FROM users WHERE id = ?", [
+      id,
+    ]);
+    const [resultPhone] = await poolPhone.query(
+      "DELETE FROM users WHERE id = ?",
+      [id]
+    );
+    const [resultEmail] = await poolEmail.query(
+      "DELETE FROM users WHERE id = ?",
+      [id]
+    );
 
-    if (resultMain.affectedRows === 0 && resultPhone.affectedRows === 0 && resultEmail.affectedRows === 0) {
-      return res.status(404).json({ message: "User not found in any database" });
+    if (
+      resultMain.affectedRows === 0 &&
+      resultPhone.affectedRows === 0 &&
+      resultEmail.affectedRows === 0
+    ) {
+      return res
+        .status(404)
+        .json({ message: "User not found in any database" });
     }
 
     res.status(200).json({ message: "User deleted successfully" });
@@ -245,7 +332,6 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
-
 
 const userStatus = async (req, res) => {
   try {
@@ -280,7 +366,9 @@ const userStatus = async (req, res) => {
     }
 
     res.status(200).json({
-      message: `User ${status === "deactivate" ? "deactivated" : "activated"} successfully`,
+      message: `User ${
+        status === "deactivate" ? "deactivated" : "activated"
+      } successfully`,
       status,
     });
   } catch (err) {
@@ -294,7 +382,9 @@ const forgotPassword = async (req, res) => {
     const { identifier } = req.body; // single input field from frontend
 
     if (!identifier) {
-      return res.status(400).json({ message: "Please provide a username, email, or phone number" });
+      return res
+        .status(400)
+        .json({ message: "Please provide a username, email, or phone number" });
     }
 
     // Search in main DB
@@ -318,7 +408,9 @@ const forgotPassword = async (req, res) => {
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
 
     if (!user) {
-      return res.status(404).json({ message: "No account found with provided details" });
+      return res
+        .status(404)
+        .json({ message: "No account found with provided details" });
     }
 
     // Continue with reset logic...
@@ -353,33 +445,31 @@ const forgotPassword = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "Password reset link sent successfully!" });
-
   } catch (error) {
     console.error("Error in forgotPassword:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-
-
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { newPassword, confirmPassword } = req.body;
 
+    // Validate input
     if (!newPassword || !confirmPassword) {
       return res.status(400).json({ message: "Both password fields are required" });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // ✅ Verify JWT token
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -389,75 +479,22 @@ const resetPassword = async (req, res) => {
 
     const userId = decoded.id;
 
-    // ✅ Check across all DBs
-    const [mainUsers] = await pool.query("SELECT * FROM users WHERE id = ?", [userId]);
-    const [phoneUsers] = await poolPhone.query("SELECT * FROM users WHERE id = ?", [userId]);
-    const [emailUsers] = await poolEmail.query("SELECT * FROM users WHERE id = ?", [userId]);
-
-    let user = null;
-    let source = "";
-
-    if (mainUsers.length) {
-      user = mainUsers[0];
-      source = "main";
-    } else if (phoneUsers.length) {
-      user = phoneUsers[0];
-      source = "phone";
-    } else if (emailUsers.length) {
-      user = emailUsers[0];
-      source = "email";
-    }
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // ✅ Check old passwords from main DB
-    const [oldPasswords] = await pool.query(
-      "SELECT old_password FROM previous_passwords WHERE user_id = ?",
-      [userId]
-    );
-
-    for (let prev of oldPasswords) {
-      const isSame = await bcrypt.compare(newPassword, prev.old_password);
-      if (isSame) {
-        return res.status(400).json({
-          message: "You cannot reuse a previously used password",
-        });
-      }
-    }
-
-    // ✅ Hash new password
+    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // ✅ Store current password in previous_passwords before updating
-    if (user.password) {
-      await pool.query(
-        "INSERT INTO previous_passwords (user_id, old_password) VALUES (?, ?)",
-        [userId, user.password]
-      );
-    }
+    // Update password in all databases
+    await Promise.all([
+      pool.query("UPDATE users SET password_hash = ? WHERE id = ?", [hashedPassword, userId]),
+      poolPhone.query("UPDATE users SET password_hash = ? WHERE id = ?", [hashedPassword, userId]),
+      poolEmail.query("UPDATE users SET password_hash = ? WHERE id = ?", [hashedPassword, userId]),
+    ]);
 
-    // ✅ Update in correct DB
-    if (source === "main") {
-      await pool.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
-    } else if (source === "phone") {
-      await poolPhone.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
-    } else if (source === "email") {
-      await poolEmail.query("UPDATE users SET password = ? WHERE id = ?", [hashedPassword, userId]);
-    }
-
-    res.status(200).json({ message: "Password reset successfully" });
-
+    res.status(200).json({ message: "Password has been successfully reset" });
   } catch (error) {
-    console.error("Error in resetPassword:", error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Server error during password reset" });
   }
 };
-
-
-
-
 module.exports = {
   userRegistration,
   loginUser,

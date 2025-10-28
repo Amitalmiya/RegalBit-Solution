@@ -209,7 +209,7 @@ const EmailRegistration = () => {
               <div className="flex flex-col items-center">
                 <button
                   className="w-full mb-3 max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow"
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/login")}
                 >
                   <div className="bg-white p-1 rounded-full">
                     <svg
