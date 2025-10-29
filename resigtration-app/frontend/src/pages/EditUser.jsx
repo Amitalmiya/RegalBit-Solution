@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const initialForm = {
   phone: "",
@@ -119,6 +120,7 @@ const EditUser = () => {
   const navigate = useNavigate();
   const [edit, setEdit] = useState(initialForm);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false); 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -165,6 +167,7 @@ const EditUser = () => {
     }
   };
 
+  
   return (
     <div className="bg-gray-200 flex items-center justify-center w-full min-h-screen py-8">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white bg-white">
@@ -184,6 +187,7 @@ const EditUser = () => {
             }) => (
               <div className="mb-4" key={name}>
                 <label className="italic">{label}</label>
+
                 {type === "select" ? (
                   <select
                     name={name}
@@ -201,6 +205,30 @@ const EditUser = () => {
                       </option>
                     ))}
                   </select>
+                ) : name === "password" ? (
+                  // 👁️ Password field with show/hide toggle
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name={name}
+                      placeholder={placeholder}
+                      value={edit[name] || ""}
+                      onChange={(e) =>
+                        setEdit({ ...edit, [name]: e.target.value })
+                      }
+                      className="border w-full focus:ring-1 focus:ring-black italic text-center pr-10"
+                      maxLength={maxLength}
+                      minLength={minLength}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600"
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 ) : (
                   <input
                     type={type}
@@ -216,6 +244,7 @@ const EditUser = () => {
                     required
                   />
                 )}
+
                 {errors[name] && (
                   <p className="text-red-500 text-sm italic mt-1">
                     {errors[name]}

@@ -120,8 +120,14 @@ const loginUser = async (req, res) => {
     );
     const user = mainUsers[0] || phoneUsers[0] || emailUsers[0];
 
-    if (!user)
+    if (!user) {
       return res.status(401).json({ message: "Invalid username or password." });
+    }
+
+    if (user.status === "deactive") {
+      return res.status(403).json({ message: "Your Account is deactivated" })
+    }
+
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid username or password." });
@@ -131,7 +137,7 @@ const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successfully",
       token,
-      user: { id: user.id, userName: user.userName, role: user.role },
+      user: { id: user.id, userName: user.userName, role: user.role, status: user.status },
     });
   } catch (err) {
     console.error(err);
@@ -223,13 +229,11 @@ const allUsers = async (req, res) => {
       })) || []),
     ];
 
-    res
-      .status(200)
-      .json({
-        message: "All users fetched successfully",
-        totalUsers: allUsers.length,
-        allUsers,
-      });
+    res.status(200).json({
+      message: "All users fetched successfully",
+      totalUsers: allUsers.length,
+      allUsers,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error", error: err });
@@ -379,7 +383,7 @@ const userStatus = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
   try {
-    const { identifier } = req.body; // single input field from frontend
+    const { identifier } = req.body;
 
     if (!identifier) {
       return res
@@ -387,19 +391,16 @@ const forgotPassword = async (req, res) => {
         .json({ message: "Please provide a username, email, or phone number" });
     }
 
-    // Search in main DB
     const [mainUsers] = await pool.query(
       "SELECT * FROM users WHERE userName = ? OR email = ? OR phone = ?",
       [identifier, identifier, identifier]
     );
 
-    // Search in phone DB (no email column)
     const [phoneUsers] = await poolPhone.query(
       "SELECT * FROM users WHERE userName = ? OR phone = ?",
       [identifier, identifier]
     );
 
-    // Search in email DB (no phone column)
     const [emailUsers] = await poolEmail.query(
       "SELECT * FROM users WHERE userName = ? OR email = ?",
       [identifier, identifier]
@@ -413,7 +414,6 @@ const forgotPassword = async (req, res) => {
         .json({ message: "No account found with provided details" });
     }
 
-    // Continue with reset logic...
     const resetToken = jwt.sign(
       { id: user.id, userName: user.userName },
       process.env.JWT_SECRET,
@@ -456,9 +456,10 @@ const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { newPassword, confirmPassword } = req.body;
 
-    // Validate input
     if (!newPassword || !confirmPassword) {
-      return res.status(400).json({ message: "Both password fields are required" });
+      return res
+        .status(400)
+        .json({ message: "Both password fields are required" });
     }
 
     if (newPassword !== confirmPassword) {
@@ -466,27 +467,37 @@ const resetPassword = async (req, res) => {
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
     }
 
-    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      return res.status(400).json({ message: "Invalid or expired reset token" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
     }
 
     const userId = decoded.id;
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password in all databases
     await Promise.all([
-      pool.query("UPDATE users SET password_hash = ? WHERE id = ?", [hashedPassword, userId]),
-      poolPhone.query("UPDATE users SET password_hash = ? WHERE id = ?", [hashedPassword, userId]),
-      poolEmail.query("UPDATE users SET password_hash = ? WHERE id = ?", [hashedPassword, userId]),
+      pool.query("UPDATE users SET password_hash = ? WHERE id = ?", [
+        hashedPassword,
+        userId,
+      ]),
+      poolPhone.query("UPDATE users SET password_hash = ? WHERE id = ?", [
+        hashedPassword,
+        userId,
+      ]),
+      poolEmail.query("UPDATE users SET password_hash = ? WHERE id = ?", [
+        hashedPassword,
+        userId,
+      ]),
     ]);
 
     res.status(200).json({ message: "Password has been successfully reset" });
@@ -495,6 +506,7 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error during password reset" });
   }
 };
+
 module.exports = {
   userRegistration,
   loginUser,

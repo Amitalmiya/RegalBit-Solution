@@ -47,9 +47,14 @@ const Login = () => {
         }
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Server error. Please try again later."
-      );
+      const message = err.response?.data?.message || "Server error. Please try again later.";
+
+      if (err.response?.status === 403) {
+  alert("Your account has been deactivated by the superadmin. Please contact support team.");
+} else {
+  alert(message);
+}
+      setError(message);
       console.log(err);
     }
   };

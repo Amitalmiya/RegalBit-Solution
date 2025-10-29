@@ -38,6 +38,7 @@ const DashBoard = () => {
 
   const [loading, setLoading] = useState(false);
 
+
   const navigate = useNavigate();
 
   const { id } = useParams();
@@ -180,9 +181,9 @@ const DashBoard = () => {
     }
   };
 
-  const editUser = (id) => {
-    navigate(`/edit-user/${id}`);
-  };
+  // const editUser = (id) => {
+  //   navigate(`/edit-user/${id}`);
+  // };
 
   // Profile data here ----------------------------------------------------
   useEffect(() => {
@@ -266,6 +267,34 @@ const DashBoard = () => {
     } catch (err) {
       console.error("Status update error:", err.response?.data || err);
       alert("Failed to update user status");
+    }
+  };
+
+  const handleChangeRole = async (id, currentRole) => {
+    const newRole = prompt(
+      `Current role: ${currentRole}\nEnter new role (user, admin, superadmin):`
+    );
+
+    if (!newRole) return;
+
+    const allowedRoles = ["user", "admin", "superadmin"];
+    if (!allowedRoles.includes(newRole.toLowerCase())) {
+      alert("Invalid role entered!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:5000/api/users/role/${id}`,
+        { role: newRole.toLowerCase() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("User role updated successfully!");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to update role");
     }
   };
 
@@ -386,20 +415,8 @@ const DashBoard = () => {
                           )}
                         </button>
 
-                        {user.role === "superadmin" && (
-                          <button
-                            onClick={() => toggleRole(u.id)}
-                            className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition cursor-pointer"
-                          >
-                            <FaUserCheck size={14} className="text-blue-600" />
-                            <span className="text-blue-600 font-medium">
-                              Change Role
-                            </span>
-                          </button>
-                        )}
-
                         <button
-                          onClick={() => editUser(u.id)}
+                          onClick={() => navigate(`/edit/${u.id}`)}
                           className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition cursor-pointer"
                         >
                           <FaEdit size={14} className="text-green-600" />
