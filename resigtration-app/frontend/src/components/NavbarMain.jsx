@@ -73,24 +73,6 @@ const NavbarMain = () => {
       >
         <nav>
           <ul className="md:flex items-center justify-between text-base pt-4 md:pt-0">
-            {(role === "admin" || role === "superadmin") && (
-              <>
-                <li>
-                  <Link to="/dashboard" className="hover:bg-blue-700 px-3 py-2 rounded">
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/allusers"
-                    className="hover:bg-blue-700 px-3 py-2 rounded transition"
-                  >
-                    All Users
-                  </Link>
-                </li>
-              </>
-            )}
-
             {role === "user" && (
               <>
               <li>

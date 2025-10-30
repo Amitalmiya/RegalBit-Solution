@@ -24,6 +24,8 @@ function App() {
 
   const [role, setRole] = useState(localStorage.getItem("role"));
 
+  const [user, setUser] = useState();
+
   useEffect(() => {
     const handleStorageChange = () => {
       setIsLoggedIn(!!localStorage.getItem("token"));
@@ -36,9 +38,9 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        {isLoggedIn && role === "user" && (
-          <NavbarMain onLogout={() => setIsLoggedIn(false)} />
-        )}
+            {isLoggedIn && role === "user" && (
+              <NavbarMain onLogout={() => setIsLoggedIn(false)} />
+            )}
         <Routes>
           <Route path="/" element={<RegistrationForm />} />
           <Route path="demo" element={<Demo />} />
@@ -91,7 +93,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
         </Routes>
       </BrowserRouter>
     </>

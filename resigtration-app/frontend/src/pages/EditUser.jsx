@@ -120,7 +120,9 @@ const EditUser = () => {
   const navigate = useNavigate();
   const [edit, setEdit] = useState(initialForm);
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
+
+  const role = localStorage.getItem("role")
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -135,7 +137,6 @@ const EditUser = () => {
   const handleFormEdit = async (e) => {
     e.preventDefault();
     try {
-
       const existingUsers = await axios.get("http://localhost:5000/api/users");
 
       const userEmailExist = existingUsers.data.some(
@@ -167,7 +168,6 @@ const EditUser = () => {
     }
   };
 
-  
   return (
     <div className="bg-gray-200 flex items-center justify-center w-full min-h-screen py-8">
       <div className="p-8 rounded-[11px] shadow-md w-full max-w-md border border-white bg-white">
@@ -257,7 +257,13 @@ const EditUser = () => {
           <div className="flex justify-center gap-4 mt-6">
             <button
               type="button"
-              onClick={() => navigate(`/profile/${id}`)}
+              onClick={() => {
+                if (role === "admin" || role === "superadmin") {
+                  navigate("/dashboard");
+                } else {
+                  navigate(`/profile/${id}`);
+                }
+              }}
               className="italic border rounded-[5px] w-1/3 bg-red-500 py-2 hover:bg-red-300 transition"
             >
               Cancel
