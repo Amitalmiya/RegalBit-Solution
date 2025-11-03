@@ -1,4 +1,4 @@
-const { poolPhone, poolEmail } = require("../config/db");
+const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "Amit@123$";
@@ -8,34 +8,27 @@ function generateOtp() {
 }
 
 const requestPhoneOtp = async (req, res) => {
-  try {
-    const { phone, userName, password } = req.body;
-    if (!phone) return res.status(400).json({ error: "Phone number required" });
-    if (!userName || !password)
-      return res.status(400).json({ error: "Username and password required" });
+   try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ error: "Phone number is required" });
 
-    const [existingUser] = await poolPhone.query(
-      `SELECT * FROM users WHERE phone =? OR userName = ?`,
-      [phone, userName]
-    );
-
+    const [existingUser] = await pool.query("SELECT * FROM users WHERE phone = ?", [phone]);
     if (existingUser.length > 0) {
-      return res
-        .status(400)
-        .json({ error: "Phone or Username already exists. Please login." });
+      return res.status(400).json({ error: "Phone already registered. Please login." });
     }
 
     const otp = generateOtp();
-    const expireAt = new Date(Date.now() + 1 * 60 * 1000);
+    const expireAt = new Date(Date.now() + 1 * 60 * 1000); // expires in 1 min
 
-    await poolPhone.query(
-      `INSERT INTO otps (contact, otp, purpose, expires_at) VALUES (?, ?, ?, ?)`,
+    await pool.query(
+      "INSERT INTO otps (contact, otp, purpose, expires_at) VALUES (?, ?, ?, ?)",
       [phone, otp, "signup", expireAt]
     );
 
-    res.json({ message: "OTP sent to phone", otp });
+    // You can integrate Twilio / MSG91 here instead of sending the OTP in response
+    res.json({ message: "OTP sent successfully", otp });
   } catch (err) {
-    console.error(err);
+    console.error("Error in requestPhoneOtp:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };
@@ -45,47 +38,41 @@ const requestPhoneOtp = async (req, res) => {
 
 const verifyPhoneOtp = async (req, res) => {
   try {
-    const { phone, userName, password, otp } = req.body;
+    const { phone, otp } = req.body;
 
     if (!phone || !otp)
       return res.status(400).json({ error: "Phone and OTP required" });
 
-    // 1️⃣ Fetch latest OTP
-    const [otpRows] = await poolPhone.query(
+    const [otpRows] = await pool.query(
       `SELECT * FROM otps WHERE contact=? AND purpose='signup' AND is_verified=0 ORDER BY created_at DESC LIMIT 1`,
       [phone]
     );
+
     if (!otpRows.length) return res.status(400).json({ error: "No OTP found" });
 
     const otpRecord = otpRows[0];
 
-    // 2️⃣ Check OTP expiration
     if (new Date(otpRecord.expires_at) < new Date())
       return res.status(400).json({ error: "OTP expired" });
 
-    // 3️⃣ Check user existence
-    const [users] = await poolPhone.query(`SELECT * FROM users WHERE phone=? LIMIT 1`, [phone]);
+    const [users] = await pool.query(`SELECT * FROM users WHERE phone=? LIMIT 1`, [phone]);
     const user = users[0];
 
     if (user?.permanently_blocked)
       return res.status(403).json({ error: "Account permanently blocked. Contact admin." });
 
-    // If temporarily blocked, show remaining time
     if (user?.blocked_until && new Date(user.blocked_until) > new Date()) {
       const minutesLeft = Math.ceil((new Date(user.blocked_until) - new Date()) / 60000);
       return res.status(403).json({ error: `Try again in ${minutesLeft} minutes` });
     }
 
-    // 4️⃣ Validate OTP
     if (String(otpRecord.otp) !== String(otp)) {
       let failedAttempts = (user?.failed_attempts || 0) + 1;
 
-      // Define lock durations (in minutes)
       const lockDurations = [0, 2, 4]; // 1st fail: 0, 2nd: 2 mins, 3rd: 4 mins
 
-      // If reached 3 or more failed attempts => permanently blocked
       if (failedAttempts >= 3) {
-        await poolPhone.query(
+        await pool.query(
           `UPDATE users SET permanently_blocked=1 WHERE phone=?`,
           [phone]
         );
@@ -94,14 +81,13 @@ const verifyPhoneOtp = async (req, res) => {
           .json({ error: "Account permanently blocked after 3 wrong attempts." });
       }
 
-      // Set temporary block
       const blockTime = lockDurations[failedAttempts] || 0;
       const blockedUntil = blockTime
         ? new Date(Date.now() + blockTime * 60 * 1000)
         : null;
 
       if (user) {
-        await poolPhone.query(
+        await pool.query(
           `UPDATE users SET failed_attempts=?, blocked_until=? WHERE phone=?`,
           [failedAttempts, blockedUntil, phone]
         );
@@ -114,28 +100,23 @@ const verifyPhoneOtp = async (req, res) => {
       });
     }
 
-    // 5️⃣ If OTP is correct — reset failed attempts
     if (user) {
-      await poolPhone.query(
+      await pool.query(
         `UPDATE users SET failed_attempts=0, blocked_until=NULL WHERE phone=?`,
         [phone]
       );
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // 6️⃣ Mark OTP verified
-    await poolPhone.query(`UPDATE otps SET is_verified=1 WHERE id=?`, [otpRecord.id]);
+    await pool.query(`UPDATE otps SET is_verified=1 WHERE id=?`, [otpRecord.id]);
 
-    // 7️⃣ Hash password and create new user
-    const passwordHash = await bcrypt.hash(password, 10);
-    const [result] = await poolPhone.query(
-      `INSERT INTO users (userName, phone, password_hash, role) VALUES (?, ?, ?, ?)`,
-      [userName, phone, passwordHash, "user"]
+    const [result] = await pool.query(
+      `INSERT INTO users (phone, role, status) VALUES (?, ?, ?)`,
+      [phone, "user", "active"]
     );
 
-    // 8️⃣ Generate JWT
     const token = jwt.sign(
-      { id: result.insertId, userName, phone, role: "user" },
+      { id: result.insertId, phone, role: "user" },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -143,13 +124,16 @@ const verifyPhoneOtp = async (req, res) => {
     res.status(201).json({
       message: "User created and logged in successfully via phone",
       token,
-      user: { id: result.insertId, userName, phone },
+      user: { id: result.insertId, phone },
     });
   } catch (err) {
     console.error("Error verifying OTP:", err);
     res.status(500).json({ error: "Server Error" });
   }
 };
+
+
+
 
 
 const requestEmailOtp = async (req, res) => {

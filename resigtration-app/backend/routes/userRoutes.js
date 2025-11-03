@@ -15,6 +15,7 @@ const {
   getUserProfile,
   forgotPassword,
   resetPassword,
+  searchUsers,
 } = require("../controllers/userController");
 
 
@@ -39,6 +40,8 @@ router.get("/dashboard", authenticateToken, isAdminOrSuperAdmin);
 
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
+
+router.get("/search", authenticateToken, isAdminOrSuperAdmin, searchUsers);
 
 
 module.exports = router;

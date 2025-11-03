@@ -18,6 +18,7 @@ import ForgottenPassword from "./components/ForgottenPassword";
 import Demo from "./pages/Demo";
 import { useEffect, useState } from "react";
 import ResetPassword from "./components/ResetPassword";
+import ProfileForm from "./components/ProfileForm";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
@@ -38,9 +39,9 @@ function App() {
   return (
     <>
       <BrowserRouter>
-            {isLoggedIn && role === "user" && (
-              <NavbarMain onLogout={() => setIsLoggedIn(false)} />
-            )}
+        {isLoggedIn && role === "user" && (
+          <NavbarMain onLogout={() => setIsLoggedIn(false)} />
+        )}
         <Routes>
           <Route path="/" element={<RegistrationForm />} />
           <Route path="demo" element={<Demo />} />
@@ -90,6 +91,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddNew />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile-setup/:token"
+            element={
+              <ProtectedRoute>
+                <ProfileForm />
               </ProtectedRoute>
             }
           />

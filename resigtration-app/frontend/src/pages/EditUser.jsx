@@ -47,13 +47,13 @@ const fields = [
     placeholder: "Enter a strong password",
     minLength: 8,
   },
-  {
-    name: "socialSecurityNo",
-    label: "Social Security Number :",
-    type: "tel",
-    placeholder: "123-45-6789",
-    maxLength: 11,
-  },
+  // {
+  //   name: "socialSecurityNo",
+  //   label: "Social Security Number :",
+  //   type: "tel",
+  //   placeholder: "123-45-6789",
+  //   maxLength: 11,
+  // },
   {
     name: "dateOfBirth",
     label: "Date of Birth :",
@@ -68,39 +68,39 @@ const fields = [
     placeholder: "Enter your name",
     maxLength: 20,
   },
-  {
-    name: "websiteUrl",
-    label: "Website Url :",
-    type: "text",
-    placeholder: "https://example.com",
-  },
-  {
-    name: "creditCardNo",
-    label: "Credit Card Number :",
-    type: "text",
-    placeholder: "xxxx-xxxx-xxxx-xxxx",
-    maxLength: 19,
-  },
-  {
-    name: "driverLicense",
-    label: "Driver License :",
-    type: "text",
-    placeholder: "X12X456",
-    maxLength: 12,
-  },
-  {
-    name: "timeFormat",
-    label: "Time :",
-    type: "text",
-    placeholder: "HH:MM AM/PM",
-    maxLength: 7,
-  },
-  {
-    name: "hexaDecimalColorCode",
-    label: "Hexadecimal Color Code :",
-    type: "text",
-    placeholder: "#FFF, #FFFFFF, #F5A52S",
-  },
+  // {
+  //   name: "websiteUrl",
+  //   label: "Website Url :",
+  //   type: "text",
+  //   placeholder: "https://example.com",
+  // },
+  // {
+  //   name: "creditCardNo",
+  //   label: "Credit Card Number :",
+  //   type: "text",
+  //   placeholder: "xxxx-xxxx-xxxx-xxxx",
+  //   maxLength: 19,
+  // },
+  // {
+  //   name: "driverLicense",
+  //   label: "Driver License :",
+  //   type: "text",
+  //   placeholder: "X12X456",
+  //   maxLength: 12,
+  // },
+  // {
+  //   name: "timeFormat",
+  //   label: "Time :",
+  //   type: "text",
+  //   placeholder: "HH:MM AM/PM",
+  //   maxLength: 7,
+  // },
+  // {
+  //   name: "hexaDecimalColorCode",
+  //   label: "Hexadecimal Color Code :",
+  //   type: "text",
+  //   placeholder: "#FFF, #FFFFFF, #F5A52S",
+  // },
   {
     name: "gender",
     label: "Gender :",
@@ -206,7 +206,6 @@ const EditUser = () => {
                     ))}
                   </select>
                 ) : name === "password" ? (
-                  // 👁️ Password field with show/hide toggle
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}

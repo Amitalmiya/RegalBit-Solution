@@ -1,12 +1,25 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { CgProfile } from "react-icons/cg";
-import { IoIosLogOut, IoMdAdd } from "react-icons/io";
-import { FaUserTimes, FaUserCheck, FaEdit, FaUsers, FaUserPlus, FaChartBar } from "react-icons/fa";
+import { IoIosLogOut, IoMdAdd, IoMdMail } from "react-icons/io";
+import {
+  FaUserTimes,
+  FaUserCheck,
+  FaEdit,
+  FaUsers,
+  FaUserPlus,
+  FaSearch,
+  FaRegCalendar,
+  FaRegCalendarAlt,
+  FaUserFriends,
+} from "react-icons/fa";
 import { MdDeleteForever, MdSpaceDashboard } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FiMoreVertical } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
+import { FaRegFileAlt } from "react-icons/fa";
+
 
 const DashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +51,10 @@ const DashBoard = () => {
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const [loading, setLoading] = useState(false);
+
+  const [query, setQuery] = useState("");
+
+  const [filteredUsers, setFilteredUsers] = useState([]);
 
   const navigate = useNavigate();
 
@@ -129,13 +146,43 @@ const DashBoard = () => {
         ]
       : []),
     {
+      name: "Find User",
+      icon: <FaSearch size={20} className="text-yellow-500" />,
+      key: "findUser",
+    },
+    {
+      name: "Messages",
+      icon: <IoChatbubbleEllipsesSharp size={20} className="text-pink-500"/>,
+      key: "messages",
+    },
+    {
+      name: "Mail Box",
+      icon: <IoMdMail size={20} className="text-white-500"/>,
+      key: "mail",
+    },
+    {
+      name: "Members",
+      icon: <FaUserFriends size={20} className="text-purple-500"/>,
+      key: "members",
+    },
+    {
+      name: "Report",
+      icon: <FaRegFileAlt size={20} className="text-orange-500" />,
+      key: "report",
+    },
+    {
+      name: "Calendar",
+      icon: <FaRegCalendarAlt size={20} className="text-cyan-500" />,
+      key: "calendar",
+    },
+    {
       name: "Profile",
       icon: <CgProfile size={20} className="text-indigo-500" />,
       key: "profile",
     },
     {
       name: "Logout",
-      icon: <IoIosLogOut size={22} className="text-red-500" />,
+      icon: <IoIosLogOut size={20} className="text-red-500" />,
       key: "logout",
     },
   ];
@@ -291,288 +338,384 @@ const DashBoard = () => {
     }
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim())
+      return alert("Please enter a name, username, or phone number.");
+
+    try {
+      const res = await axios.get(`http://localhost:5000/api/users/search`, {
+        params: { query },
+      });
+      setFilteredUsers(res.data);
+    } catch (err) {
+      console.error("Search error:", err);
+      alert("No user found or server error.");
+    }
+  };
+
   const renderAllUsers = () => (
-  <div className="p-10 bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 min-h-screen">
-    <div className="flex items-center justify-between mb-8">
-      <h2 className="text-4xl font-extrabold text-gray-800 tracking-tight">
-        👥 All Users
-      </h2>
+    <div className="p-10 bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 min-h-screen">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-4xl font-extrabold text-gray-800 tracking-tight">
+          👥 All Users
+        </h2>
 
-      {user.role === "superadmin" && (
-        <button
-  onClick={() => navigate("/add-newUser")}
-  className="relative flex items-center gap-2 px-6 py-2.5 rounded-2xl font-semibold text-white 
-  bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 
-  shadow-lg shadow-green-200 
-  hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 
-  hover:shadow-xl hover:shadow-green-300 
-  transform hover:-translate-y-0.5 hover:scale-[1.04] 
-  active:scale-95 transition-all duration-300 ease-out group cursor-pointer"
->
-  <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400 to-emerald-400 opacity-0 group-hover:opacity-20 blur-lg transition duration-300"></span>
+        {user.role === "superadmin" && (
+          <button
+            onClick={() => navigate("/add-newUser")}
+            className="relative flex items-center gap-2 px-6 py-2.5 rounded-2xl font-semibold text-white bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 shadow-lg shadow-green-200 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 hover:shadow-xl hover:shadow-green-300 transform hover:-translate-y-0.5 hover:scale-[1.04] active:scale-95 transition-all duration-300 ease-out group cursor-pointer"
+          >
+            <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400 to-emerald-400 opacity-0 group-hover:opacity-20 blur-lg transition duration-300"></span>
 
-  <IoMdAdd
-    size={22}
-    className="transform group-hover:rotate-90 transition-transform duration-300"
-  />
-  <span className="tracking-wide drop-shadow-sm">Add User</span>
-</button>
-      )}
-    </div>
+            <IoMdAdd
+              size={22}
+              className="transform group-hover:rotate-90 transition-transform duration-300"
+            />
+            <span className="tracking-wide drop-shadow-sm">Add User</span>
+          </button>
+        )}
+      </div>
 
-    <div className="overflow-x-auto bg-white shadow-2xl rounded-3xl border border-gray-200">
-      <table className="min-w-full text-sm text-gray-800">
-        <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white uppercase tracking-wider text-[13px]">
-          <tr>
-            <th className="px-6 py-4 text-left font-semibold">ID</th>
-            <th className="px-6 py-4 text-left font-semibold">Username</th>
-            <th className="px-6 py-4 text-left font-semibold">Email</th>
-            <th className="px-6 py-4 text-left font-semibold">Phone</th>
-            <th className="px-6 py-4 text-left font-semibold">Role</th>
-            <th className="px-6 py-4 text-left font-semibold">Status</th>
-            <th className="px-6 py-4 text-center font-semibold">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {loading ? (
+      <div className="overflow-x-auto bg-white shadow-2xl rounded-3xl border border-gray-200">
+        <table className="min-w-full text-sm text-gray-800">
+          <thead className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white uppercase tracking-wider text-[13px]">
             <tr>
-              <td colSpan="7" className="text-center py-8 text-gray-500 italic">
-                Loading users...
-              </td>
+              <th className="px-6 py-4 text-left font-semibold">ID</th>
+              <th className="px-6 py-4 text-left font-semibold">Username</th>
+              <th className="px-6 py-4 text-left font-semibold">Email</th>
+              <th className="px-6 py-4 text-left font-semibold">Phone</th>
+              <th className="px-6 py-4 text-left font-semibold">Role</th>
+              <th className="px-6 py-4 text-left font-semibold">Status</th>
+              <th className="px-6 py-4 text-center font-semibold">Actions</th>
             </tr>
-          ) : users.length === 0 ? (
-            <tr>
-              <td colSpan="7" className="text-center py-8 text-gray-500 italic">
-                No users found
-              </td>
-            </tr>
-          ) : (
-            users.map((u, i) => (
-              <tr
-                key={u.id}
-                className={`${
-                  i % 2 === 0 ? "bg-gray-50" : "bg-white"
-                } hover:bg-blue-50 transition-all duration-200 border-b border-gray-100`}
-              >
-                <td className="px-6 py-4 font-semibold text-gray-700">
-                  #{u.id}
-                </td>
-                <td className="px-6 py-4">{u.userName}</td>
-                <td className="px-6 py-4">{u.email || "-"}</td>
-                <td className="px-6 py-4">{u.phone || "-"}</td>
+          </thead>
 
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
-                      u.role === "admin"
-                        ? "bg-blue-100 text-blue-700"
-                        : u.role === "superadmin"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {u.role}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
-                      u.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {u.status || "inactive"}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 text-center relative">
-                  <button
-                    onClick={() => toggleMenu(u.id)}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 shadow-sm transition-all cursor-pointer"
-                    title="Options"
-                  >
-                    <FiMoreVertical size={18} className="text-gray-700" />
-                  </button>
-
-                  {openMenuId === u.id && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white shadow-xl rounded-xl border border-gray-200 z-10 animate-fadeIn">
-                      <button
-                        onClick={() => {
-                          handleUserStatus(u.id, u.status);
-                          setOpenDropdownId(null);
-                        }}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition"
-                      >
-                        {u.status === "active" ? (
-                          <>
-                            <FaUserTimes size={14} className="text-yellow-600" />
-                            <span>Deactivate</span>
-                          </>
-                        ) : (
-                          <>
-                            <FaUserCheck size={14} className="text-green-600" />
-                            <span>Activate</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => navigate(`/edit/${u.id}`)}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition"
-                      >
-                        <FaEdit size={14} className="text-blue-600" />
-                        <span className="text-blue-700 font-medium">Edit User</span>
-                      </button>
-
-                      {user?.role === "superadmin" && (
-                        <button
-                          onClick={() => handleDeleteUser(u.id)}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition"
-                        >
-                          <MdDeleteForever size={14} className="text-red-600" />
-                          <span className="text-red-600 font-medium">Delete</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
+          <tbody>
+            {loading ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="text-center py-8 text-gray-500 italic"
+                >
+                  Loading users...
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : users.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="text-center py-8 text-gray-500 italic"
+                >
+                  No users found
+                </td>
+              </tr>
+            ) : (
+              users.map((u, i) => (
+                <tr
+                  key={u.id}
+                  className={`${
+                    i % 2 === 0 ? "bg-gray-50" : "bg-white"
+                  } hover:bg-blue-50 transition-all duration-200 border-b border-gray-100`}
+                >
+                  <td className="px-6 py-4 font-semibold text-gray-700">
+                    #{u.id}
+                  </td>
+                  <td className="px-6 py-4">{u.userName}</td>
+                  <td className="px-6 py-4">{u.email || "-"}</td>
+                  <td className="px-6 py-4">{u.phone || "-"}</td>
+
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
+                        u.role === "admin"
+                          ? "bg-blue-100 text-blue-700"
+                          : u.role === "superadmin"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {u.role}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
+                        u.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {u.status || "inactive"}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-center relative">
+                    <button
+                      onClick={() => toggleMenu(u.id)}
+                      className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 shadow-sm transition-all cursor-pointer"
+                      title="Options"
+                    >
+                      <FiMoreVertical size={18} className="text-gray-700" />
+                    </button>
+
+                    {openMenuId === u.id && (
+                      <div className="absolute right-0 mt-2 w-40 bg-white shadow-xl rounded-xl border border-gray-200 z-10 animate-fadeIn">
+                        <button
+                          onClick={() => {
+                            handleUserStatus(u.id, u.status);
+                            setOpenDropdownId(null);
+                          }}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition"
+                        >
+                          {u.status === "active" ? (
+                            <>
+                              <FaUserTimes
+                                size={14}
+                                className="text-yellow-600"
+                              />
+                              <span>Deactivate</span>
+                            </>
+                          ) : (
+                            <>
+                              <FaUserCheck
+                                size={14}
+                                className="text-green-600"
+                              />
+                              <span>Activate</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => navigate(`/edit/${u.id}`)}
+                          className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition"
+                        >
+                          <FaEdit size={14} className="text-blue-600" />
+                          <span className="text-blue-700 font-medium">
+                            Edit User
+                          </span>
+                        </button>
+
+                        {user?.role === "superadmin" && (
+                          <button
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition"
+                          >
+                            <MdDeleteForever
+                              size={14}
+                              className="text-red-600"
+                            />
+                            <span className="text-red-600 font-medium">
+                              Delete
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
 
   const renderAddUser = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
-    <div className="w-full max-w-md bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl p-8 border border-gray-200 hover:shadow-indigo-300/40 transition-shadow duration-300">
-      <h2 className="text-3xl font-extrabold text-center text-indigo-700 mb-6">
-        Add New User
-      </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-sm shadow-2xl rounded-2xl p-8 border border-gray-200 hover:shadow-indigo-300/40 transition-shadow duration-300">
+        <h2 className="text-3xl font-extrabold text-center text-indigo-700 mb-6">
+          Add New User
+        </h2>
 
-      {error && (
-        <p className="text-red-500 text-center mb-3 font-medium animate-pulse">
-          {error}
-        </p>
-      )}
-      {success && (
-        <p className="text-green-600 text-center mb-3 font-medium animate-pulse">
-          {success}
-        </p>
-      )}
+        {error && (
+          <p className="text-red-500 text-center mb-3 font-medium animate-pulse">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p className="text-green-600 text-center mb-3 font-medium animate-pulse">
+            {success}
+          </p>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-1">
-            Username
-          </label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              placeholder="Enter username"
+              maxLength={20}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              placeholder="Enter phone number"
+              maxLength={10}
+              pattern="[0-9]{10}"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              placeholder="Enter email address"
+              maxLength={30}
+              required
+            />
+          </div>
+
+          <div className="relative">
+            <label className="block text-gray-700 font-semibold mb-1">
+              Password
+            </label>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              placeholder="Enter password"
+              maxLength={30}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-12 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition"
+            >
+              {showPassword ? (
+                <AiOutlineEyeInvisible size={22} />
+              ) : (
+                <AiOutlineEye size={22} />
+              )}
+            </button>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1">
+              Role
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div className="flex justify-between items-center mt-6">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-5 py-2 rounded-lg font-semibold text-white shadow-md transition-all duration-300 ${
+                loading
+                  ? "bg-indigo-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.03]"
+              }`}
+            >
+              {loading ? "Adding..." : "Add User"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+  
+  const renderFindUser = () => (
+    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+      <div className="bg-white shadow-lg rounded-2xl w-full max-w-3xl p-8">
+        <h2 className="text-2xl font-bold text-center mb-6 text-indigo-600">
+          Find User
+        </h2>
+
+        <form onSubmit={handleSearch} className="flex items-center gap-3 mb-6">
           <input
             type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            placeholder="Enter username"
-            maxLength={20}
-            required
+            placeholder="Enter name, username, or phone..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-semibold mb-1">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            placeholder="Enter phone number"
-            maxLength={10}
-            pattern="[0-9]{10}"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-semibold mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            placeholder="Enter email address"
-            maxLength={30}
-            required
-          />
-        </div>
-
-        <div className="relative">
-          <label className="block text-gray-700 font-semibold mb-1">
-            Password
-          </label>
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            placeholder="Enter password"
-            maxLength={30}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-12 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition"
-          >
-            {showPassword ? (
-              <AiOutlineEyeInvisible size={22} />
-            ) : (
-              <AiOutlineEye size={22} />
-            )}
-          </button>
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-semibold mb-1">Role</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <div className="flex justify-between items-center mt-6">
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-300"
-          >
-            Cancel
-          </button>
           <button
             type="submit"
-            disabled={loading}
-            className={`px-5 py-2 rounded-lg font-semibold text-white shadow-md transition-all duration-300 ${
-              loading
-                ? "bg-indigo-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.03]"
-            }`}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-3 rounded-lg font-semibold transition"
           >
-            {loading ? "Adding..." : "Add User"}
+            Search
           </button>
-        </div>
-      </form>
+        </form>
+
+        {filteredUsers.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+              <thead className="bg-indigo-100">
+                <tr>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
+                    Name
+                  </th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
+                    Username
+                  </th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
+                    Phone
+                  </th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
+                    Email
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">{user.name}</td>
+                    <td className="py-3 px-4">{user.userName}</td>
+                    <td className="py-3 px-4">{user.phone}</td>
+                    <td className="py-3 px-4">{user.email}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center mt-4">
+            No results yet. Try searching above.
+          </p>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 
   const renderProfile = () => (
     <div className="flex justify-center items-start py-16 bg-gradient-to-br from-blue-100 via-white to-purple-100 min-h-screen">
@@ -645,6 +788,8 @@ const DashBoard = () => {
     </div>
   );
 
+  // const renderMember = () => ();
+
   const renderContent = () => {
     const mainUsers = users.filter((u) => u.source === "main");
     const phoneUsers = users.filter((u) => u.source === "phone");
@@ -658,6 +803,10 @@ const DashBoard = () => {
         return renderAddUser();
       case "profile":
         return renderProfile();
+      case "findUser":
+        return renderFindUser();
+      // case "member" :
+      //   return renderMember();
       default:
         return (
           <div className="p-6 bg-gray-100 min-h-screen">

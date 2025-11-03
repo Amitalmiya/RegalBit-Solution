@@ -22,15 +22,15 @@ const userRegistration = async (req, res) => {
       email,
       phone,
       dateOfBirth,
-      socialSecurityNo,
-      driverLicense,
+      // socialSecurityNo,
+      // driverLicense,
       gender,
       bloodGroup,
       zipCode,
-      websiteUrl,
-      creditCardNo,
-      timeFormat,
-      hexaDecimalColorCode,
+      // websiteUrl,
+      // creditCardNo,
+      // timeFormat,
+      // hexaDecimalColorCode,
       password,
       role,
     } = req.body;
@@ -47,39 +47,32 @@ const userRegistration = async (req, res) => {
       return res.status(400).json({ message: "User already exists." });
     }
 
-    let formattedDOB = null;
-    const parsedDate = new Date(dateOfBirth);
-    if (dateOfBirth) {
-      if (!isNaN(parsedDate.getTime())) {
-        formattedDOB = parsedDate.toISOString().split("T")[0];
-      }
-    }
-
     const validRoles = ["user", "admin"];
+
     const userRole = validRoles.includes(role) ? role : "user";
 
     const password_hash = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
       `INSERT INTO users
-      (userName, email, phone, dateOfBirth, socialSecurityNo, driverLicense,
-      gender, bloodGroup, zipCode, websiteUrl, creditCardNo, timeFormat,
-      hexaDecimalColorCode, password, password_hash, role)
-      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (userName, email, phone, dateOfBirth,
+      gender, bloodGroup, zipCode, password,
+      password_hash, role)
+      VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userName,
         email,
         phone,
-        formattedDOB || null,
-        socialSecurityNo || null,
-        driverLicense || null,
+        dateOfBirth || null,
+        // socialSecurityNo || null,
+        // driverLicense || null,
         gender || null,
         bloodGroup || null,
         zipCode || null,
-        websiteUrl || null,
-        creditCardNo || null,
-        timeFormat || null,
-        hexaDecimalColorCode || null,
+        // websiteUrl || null,
+        // creditCardNo || null,
+        // timeFormat || null,
+        // hexaDecimalColorCode || null,
         password,
         password_hash,
         userRole,
@@ -507,6 +500,32 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const searchUsers = async (req, res) => {
+  const {query} = req.query;
+
+  if (!query) return res.status(400).json({ error: "Query is required" });
+
+  try{
+
+    const [resultMain] = await pool.query(`SELECT id, userName, phone, email FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,[`%${query}%`, `%${query}%`, `%${query}%`])
+
+    const [resultPhone] = await poolPhone.query(`SELECT id, userName, phone FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,[`%${query}%`, `%${query}%`])
+
+    const [resultEmail] = await poolEmail.query(`SELECT id, userName, email FROM users WHERE name LIKE ? OR userName LIKE ? OR email LIKE ?`,[`%${query}%`, `%${query}%`])
+
+    const user = resultMain[0] || resultPhone[0] || resultEmail[0];
+
+    if (user.length === 0) {
+      return res.status(404).json({ error: "No User found" })
+    }
+    res.json(user)
+
+  }catch(error) {
+    console.log(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   userRegistration,
   loginUser,
@@ -519,4 +538,5 @@ module.exports = {
   userStatus,
   forgotPassword,
   resetPassword,
+  searchUsers,
 };

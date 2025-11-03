@@ -48,19 +48,20 @@ const fields = [
     placeholder: "Enter a strong password",
     minLength: 8,
   },
-  {
-    name: "socialSecurityNo",
-    label: "Social Security Number :",
-    type: "tel",
-    placeholder: "123-45-6789",
-    maxLength: 11,
-  },
+  // {
+  //   name: "socialSecurityNo",
+  //   label: "Social Security Number :",
+  //   type: "tel",
+  //   placeholder: "123-45-6789",
+  //   maxLength: 11,
+  // },
   {
     name: "dateOfBirth",
     label: "Date of Birth :",
-    type: "text",
+    type: "date",
     placeholder: "MM-DD-YYYY or MM/DD/YYYY",
     maxLength: 10,
+    format: 'MM: DD: YYYY',
   },
   {
     name: "userName",
@@ -69,39 +70,39 @@ const fields = [
     placeholder: "Enter your name",
     maxLength: 20,
   },
-  {
-    name: "websiteUrl",
-    label: "Website Url :",
-    type: "text",
-    placeholder: "https://example.com",
-  },
-  {
-    name: "creditCardNo",
-    label: "Credit Card Number :",
-    type: "text",
-    placeholder: "xxxx-xxxx-xxxx-xxxx",
-    maxLength: 19,
-  },
-  {
-    name: "driverLicense",
-    label: "Driver License :",
-    type: "text",
-    placeholder: "X12X456",
-    maxLength: 12,
-  },
-  {
-    name: "timeFormat",
-    label: "Time :",
-    type: "text",
-    placeholder: "HH:MM AM/PM",
-    maxLength: 9,
-  },
-  {
-    name: "hexaDecimalColorCode",
-    label: "Hexadecimal Color Code :",
-    type: "text",
-    placeholder: "#FFF, #FFFFFF, #F5A52S",
-  },
+  // {
+  //   name: "websiteUrl",
+  //   label: "Website Url :",
+  //   type: "text",
+  //   placeholder: "https://example.com",
+  // },
+  // {
+  //   name: "creditCardNo",
+  //   label: "Credit Card Number :",
+  //   type: "text",
+  //   placeholder: "xxxx-xxxx-xxxx-xxxx",
+  //   maxLength: 19,
+  // },
+  // {
+  //   name: "driverLicense",
+  //   label: "Driver License :",
+  //   type: "text",
+  //   placeholder: "X12X456",
+  //   maxLength: 12,
+  // },
+  // {
+  //   name: "timeFormat",
+  //   label: "Time :",
+  //   type: "text",
+  //   placeholder: "HH:MM AM/PM",
+  //   maxLength: 9,
+  // },
+  // {
+  //   name: "hexaDecimalColorCode",
+  //   label: "Hexadecimal Color Code :",
+  //   type: "text",
+  //   placeholder: "#FFF, #FFFFFF, #F5A52S",
+  // },
   {
     name: "gender",
     label: "Gender :",
@@ -167,30 +168,30 @@ const RegistrationForm = () => {
     if (!RegexPatterns.password.test(form.password)) {
       newErrors.password = "Invalid Password";
     }
-    if (!RegexPatterns.socialSecurityNo.test(form.socialSecurityNo)) {
-      newErrors.socialSecurityNo = "Invalid Social Security No";
-    }
-    if (!RegexPatterns.dateOfBirth.test(form.dateOfBirth)) {
-      newErrors.dateOfBirth = "Invalid Date of Bith";
-    }
+    // if (!RegexPatterns.socialSecurityNo.test(form.socialSecurityNo)) {
+    //   newErrors.socialSecurityNo = "Invalid Social Security No";
+    // }
+    // if (!RegexPatterns.dateOfBirth.test(form.dateOfBirth)) {
+    //   newErrors.dateOfBirth = "Invalid Date of Bith";
+    // }
     if (!RegexPatterns.userName.test(form.userName)) {
       newErrors.userName = "Invalid Username";
     }
-    if (!RegexPatterns.websiteUrl.test(form.websiteUrl)) {
-      newErrors.websiteUrl = "Invalid WebsiteURL";
-    }
-    if (!RegexPatterns.creditCardNo.test(form.creditCardNo)) {
-      newErrors.creditCardNo = "Invalid Credit Card Number";
-    }
-    if (!RegexPatterns.driverLicense.test(form.driverLicense)) {
-      newErrors.driverLicense = "Invalid Driver License";
-    }
-    if (!RegexPatterns.timeFormat.test(form.timeFormat)) {
-      newErrors.timeFormat = "Invalid Time Format";
-    }
-    if (!RegexPatterns.hexaDecimalColorCode.test(form.hexaDecimalColorCode)) {
-      newErrors.hexaDecimalColorCode = "Invalid Hexadecimal Color Code";
-    }
+    // if (!RegexPatterns.websiteUrl.test(form.websiteUrl)) {
+    //   newErrors.websiteUrl = "Invalid WebsiteURL";
+    // }
+    // if (!RegexPatterns.creditCardNo.test(form.creditCardNo)) {
+    //   newErrors.creditCardNo = "Invalid Credit Card Number";
+    // }
+    // if (!RegexPatterns.driverLicense.test(form.driverLicense)) {
+    //   newErrors.driverLicense = "Invalid Driver License";
+    // }
+    // if (!RegexPatterns.timeFormat.test(form.timeFormat)) {
+    //   newErrors.timeFormat = "Invalid Time Format";
+    // }
+    // if (!RegexPatterns.hexaDecimalColorCode.test(form.hexaDecimalColorCode)) {
+    //   newErrors.hexaDecimalColorCode = "Invalid Hexadecimal Color Code";
+    // }
     if (!form.gender) {
       newErrors.gender = "Gender is required";
     }
@@ -344,7 +345,6 @@ const RegistrationForm = () => {
                           )}
                         </span>
 
-                        {/* ✅ Password Strength Meter */}
                         {strength.label && (
                           <div className="mt-2">
                             <div className="w-full h-2 bg-gray-200 rounded-full">
@@ -409,9 +409,7 @@ const RegistrationForm = () => {
               <Link to="/phone" className="text-blue-500 hover:underline">
                 Create an account with Phone Number
               </Link>
-              <Link to="/email" className="text-blue-500 hover:underline">
-                Create an account with Email Address
-              </Link>
+
             </div>
           </form>
 

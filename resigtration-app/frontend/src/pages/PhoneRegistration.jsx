@@ -1,32 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import "react-phone-input-2/lib/style.css";
+import PhoneInput from "react-phone-input-2";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+
 
 const PhoneRegistration = () => {
-  const [userName, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+
   const [otpSent, setOtpSent] = useState(false);
   const [enteredOtp, setEnteredOtp] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [disableTime, setDisableTime] = useState(0);
   const [attemptsLeft, setAttemptsLeft] = useState(3);
-  const [strengthLevel, setStrengthLevel] = useState("");
 
   const navigate = useNavigate();
   const inputs = useRef([]);
 
-  // Regex validations
-  const indianPhoneRegex = /^(\+91)?[6-9]\d{9}$/;
-  const userNameRegex = /^[A-Za-z_][A-Za-z0-9_]{2,19}$/;
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const phoneRegex = /^\+?\d{1,4}?[\s.-]?\(?\d{1,5}?\)?[\s.-]?\d{1,9}([\s.-]?\d{1,9})?$/;
 
-  // Timer for resend button
   useEffect(() => {
     let timer;
     if (disableTime > 0) {
@@ -40,21 +35,15 @@ const PhoneRegistration = () => {
   const handleRequestOtp = async (e) => {
     e.preventDefault();
 
-    if (!indianPhoneRegex.test(phone))
+    if (!phoneRegex.test(phone))
       return setError("Enter a valid Indian phone number");
-    if (!userNameRegex.test(userName))
-      return setError("Enter a valid username");
-    if (!passwordRegex.test(password))
-      return setError(
-        "Password must include uppercase, lowercase, number, and special character"
-      );
 
     setError("");
 
     try {
       const res = await axios.post(
         "http://localhost:5000/api/auth/signup/requestphone-otp",
-        { userName, password, phone }
+        { phone }
       );
       console.log("OTP sent:", res.data.otp);
       alert("OTP sent to your phone number!");
@@ -73,14 +62,16 @@ const PhoneRegistration = () => {
     try {
       const res = await axios.post(
         "http://localhost:5000/api/auth/signup/verifyphone-otp",
-        { userName, phone, password, otp: enteredOtp }
+        { phone, otp: enteredOtp }
       );
 
       console.log("Phone registration success:", res.data);
       localStorage.setItem("token", res.data.token);
       setIsVerified(true);
       alert("Registration Successful! Redirecting to profile...");
-      navigate(`/profile/${res.data.token}`);
+      navigate(`/profile-setup/${res.data.token}`, {
+        state: { phone: phone, userId: res.data.id }
+      });
     } catch (err) {
       console.error("OTP verification error:", err);
       const errorMessage =
@@ -126,20 +117,6 @@ const PhoneRegistration = () => {
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
-  const checkPasswordStrength = (password) => {
-    let strength = 0;
-    if (password.length >= 6) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[@$!%*?&]/.test(password)) strength++;
-
-    if (strength === 0) return setStrengthLevel("");
-    if (strength === 1) return setStrengthLevel("Easy");
-    if (strength === 2) return setStrengthLevel("Medium");
-    if (strength === 3) return setStrengthLevel("Average");
-    if (strength === 4) return setStrengthLevel("Strong");
-  };
-
   if (otpSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -148,6 +125,11 @@ const PhoneRegistration = () => {
             <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
               Verify OTP
             </h2>
+            {error && (
+              <p className="text-sm text-red-600 dark:text-red-300 mb-6">
+                {error}
+              </p>
+            )}
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
               Enter the 6-digit code sent to your phone
             </p>
@@ -215,7 +197,7 @@ const PhoneRegistration = () => {
 
           <div className="flex flex-col items-center mt-4 space-y-3">
             <button
-              className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center hover:shadow cursor-pointer"
+              className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-white border border-gray-200 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow-md cursor-pointer"
               onClick={() => navigate("/")}
             >
               <div className="bg-white p-1 rounded-full">
@@ -236,35 +218,31 @@ const PhoneRegistration = () => {
               <span className="ml-4">Register Yourself</span>
             </button>
 
-            <button
-              className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline cursor-pointer"
-              onClick={() => navigate("/email")}
-            >
-              <div className="bg-white p-2 rounded-full">
-                <svg className="w-4" viewBox="0 0 533.5 544.3">
-                  <path
-                    d="M533.5 278.4c0-18.5-1.5-37.1-4.7-55.3H272.1v104.8h147c-6.1 33.8-25.7 63.7-54.4 82.7v68h87.7c51.5-47.4 81.1-117.4 81.1-200.2z"
-                    fill="#4285f4"
-                  />
-                  <path
-                    d="M272.1 544.3c73.4 0 135.3-24.1 180.4-65.7l-87.7-68c-24.4 16.6-55.9 26-92.6 26-71 0-131.2-47.9-152.8-112.3H28.9v70.1c46.2 91.9 140.3 149.9 243.2 149.9z"
-                    fill="#34a853"
-                  />
-                  <path
-                    d="M119.3 324.3c-11.4-33.8-11.4-70.4 0-104.2V150H28.9c-38.6 76.9-38.6 167.5 0 244.4l90.4-70.1z"
-                    fill="#fbbc04"
-                  />
-                  <path
-                    d="M272.1 107.7c38.8-.6 76.3 14 104.4 40.8l77.7-77.7C405 24.6 339.7-.8 272.1 0 169.2 0 75.1 58 28.9 150l90.4 70.1c21.5-64.5 81.8-112.4 152.8-112.4z"
-                    fill="#ea4335"
-                  />
-                </svg>
-              </div>
-              <span className="ml-4">Sign Up with Google</span>
-            </button>
+            <div className="w-full max-w-xs mb-3">
+                  <GoogleOAuthProvider clientId="147357071117-3s5bnhf8tmm0scal13l4v4iv8nmr4bhn.apps.googleusercontent.com">
+                    <div className="w-full font-bold shadow-sm rounded-lg py-3 bg-white border border-gray-200 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow-md cursor-pointer">
+                      <GoogleLogin
+                        onSuccess={(response) => {
+                          console.log("Google Login Success:", response);
+                          alert("Google Sign-In Successful!");
+                        }}
+                        onError={() => {
+                          console.log("Google Login Failed");
+                          alert("Google Sign-In Failed!");
+                        }}
+                        shape="rectangular"
+                        theme="outline"
+                        text="signin_with"
+                        size="large"
+                        width="280"
+                      />
+                    </div>
+                  </GoogleOAuthProvider>
+                </div>
+
 
             <button
-              className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center hover:shadow cursor-pointer"
+               className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-white border border-gray-200 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow-md cursor-pointer"   
               onClick={() => navigate("/login")}
             >
               <div className="bg-white p-2 rounded-full">
@@ -283,75 +261,28 @@ const PhoneRegistration = () => {
 
           <div className="my-5 border-b text-center">
             <span className="leading-none px-2 inline-block text-sm text-gray-600 font-medium bg-white transform translate-y-1/2">
-              Or continue with your username
+              Or continue with your Phone Number
             </span>
           </div>
 
           <form onSubmit={handleRequestOtp} className="mx-auto max-w-xs">
-            <input
-              className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-              type="text"
-              placeholder="Username"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-            />
-            <input
-              className="w-full px-8 py-4 mt-5 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-              type="tel"
-              placeholder="Phone Number"
+            <PhoneInput
+              country={"in"}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              maxLength={10}
+              onChange={setPhone}
+              inputStyle={{
+                width: "100%",
+                height: "50px",
+                borderRadius: "8px",
+                fontSize: "15px",
+                border: "1px solid #d1d5db",
+                backgroundColor: "#f9fafb",
+              }}
+              buttonStyle={{
+                border: "1px solid #d1d5db",
+                backgroundColor: "#f9fafb",
+              }}
             />
-            <div className="relative mt-5">
-              <input
-                className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  checkPasswordStrength(e.target.value);
-                }}
-              />
-              <div
-                className="absolute right-3 top-4 cursor-pointer text-gray-500"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </div>
-
-              <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    strengthLevel === "Easy"
-                      ? "bg-red-500 w-1/4"
-                      : strengthLevel === "Medium"
-                      ? "bg-orange-500 w-2/4"
-                      : strengthLevel === "Average"
-                      ? "bg-yellow-400 w-3/4"
-                      : strengthLevel === "Strong"
-                      ? "bg-green-500 w-full"
-                      : "w-0"
-                  }`}
-                ></div>
-              </div>
-              {strengthLevel && (
-                <p
-                  className={`text-sm mt-1 font-semibold ${
-                    strengthLevel === "Easy"
-                      ? "text-red-500"
-                      : strengthLevel === "Medium"
-                      ? "text-orange-500"
-                      : strengthLevel === "Average"
-                      ? "text-yellow-500"
-                      : "text-green-500"
-                  }`}
-                >
-                  {strengthLevel} Password
-                </p>
-              )}
-            </div>
 
             <button
               type="submit"
