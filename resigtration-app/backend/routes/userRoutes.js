@@ -16,6 +16,7 @@ const {
   forgotPassword,
   resetPassword,
   searchUsers,
+  googleSignup,
 } = require("../controllers/userController");
 
 
@@ -42,6 +43,8 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
 router.get("/search", authenticateToken, isAdminOrSuperAdmin, searchUsers);
+
+router.post("/google-signup", googleSignup);
 
 
 module.exports = router;

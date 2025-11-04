@@ -2,18 +2,10 @@ const { pool, poolPhone, poolEmail } = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const { OAuth2Client } = require("google-auth-library");
 const { generateToken, verifyToken } = require("../utils/tokenHelpers");
 
-function formatTimeToMySQL(timeStr) {
-  if (!timeStr) return null;
-  const [time, modifier] = timeStr.split(" ");
-  let [hours, minutes] = time.split(":").map(Number);
-  if (modifier.toUpperCase() === "PM" && hours !== 12) hours += 12;
-  if (modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}:00`;
-}
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const userRegistration = async (req, res) => {
   try {
@@ -118,7 +110,7 @@ const loginUser = async (req, res) => {
     }
 
     if (user.status === "deactive") {
-      return res.status(403).json({ message: "Your Account is deactivated" })
+      return res.status(403).json({ message: "Your Account is deactivated" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
@@ -130,7 +122,12 @@ const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successfully",
       token,
-      user: { id: user.id, userName: user.userName, role: user.role, status: user.status },
+      user: {
+        id: user.id,
+        userName: user.userName,
+        role: user.role,
+        status: user.status,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -501,28 +498,92 @@ const resetPassword = async (req, res) => {
 };
 
 const searchUsers = async (req, res) => {
-  const {query} = req.query;
+  const { query } = req.query;
 
   if (!query) return res.status(400).json({ error: "Query is required" });
 
-  try{
+  try {
+    const [resultMain] = await pool.query(
+      `SELECT id, userName, phone, email FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,
+      [`%${query}%`, `%${query}%`, `%${query}%`]
+    );
 
-    const [resultMain] = await pool.query(`SELECT id, userName, phone, email FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,[`%${query}%`, `%${query}%`, `%${query}%`])
+    const [resultPhone] = await poolPhone.query(
+      `SELECT id, userName, phone FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,
+      [`%${query}%`, `%${query}%`]
+    );
 
-    const [resultPhone] = await poolPhone.query(`SELECT id, userName, phone FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,[`%${query}%`, `%${query}%`])
-
-    const [resultEmail] = await poolEmail.query(`SELECT id, userName, email FROM users WHERE name LIKE ? OR userName LIKE ? OR email LIKE ?`,[`%${query}%`, `%${query}%`])
+    const [resultEmail] = await poolEmail.query(
+      `SELECT id, userName, email FROM users WHERE name LIKE ? OR userName LIKE ? OR email LIKE ?`,
+      [`%${query}%`, `%${query}%`]
+    );
 
     const user = resultMain[0] || resultPhone[0] || resultEmail[0];
 
     if (user.length === 0) {
-      return res.status(404).json({ error: "No User found" })
+      return res.status(404).json({ error: "No User found" });
     }
-    res.json(user)
-
-  }catch(error) {
+    res.json(user);
+  } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+const googleSignup = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ message: "No Google token provided." });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { name, email, sub: googleId, picture } = payload;
+
+    const [existingUser] = await pool.query(
+      `SELECT * FROM users WHERE email = ?`,
+      [email]
+    );
+
+    let user;
+
+    if (existingUser.length > 0) {
+      user = existingUser[0];
+    } else {
+      const hashedPassword = await bcrypt.hash(googleId, 10);
+      const [result] = await pool.query(
+        `INSERT INTO users (userName, email, password, googleId, profilePicture, role)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [name, email, hashedPassword, googleId, profilePicture, "user"]
+      );
+
+      const [newUser] = await pool.query(
+        "SELECT * FROM users WHERE id = ?",
+        [result.insertId]
+      );
+      user = newUser[0];
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      message: "Google Signup/Login successful",
+      token,
+      user,
+    });
+  } catch (error) {
+    console.error("Google signup error:", error);
+    res.status(500).json({ message: "Google signup failed" });
   }
 };
 
@@ -539,4 +600,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   searchUsers,
+  googleSignup,
 };

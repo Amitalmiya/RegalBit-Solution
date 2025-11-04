@@ -117,6 +117,24 @@ const PhoneRegistration = () => {
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await axios.post("http://localhost:5000/api/users/google-signup", {
+        credential: credentialResponse.credential,
+      });
+  
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+  
+      alert("Google Signup/Login Successful!");
+      // window.location.href = "/profile/${res.data.token}";
+      navigate(`/profile/${res.data.token}`)
+    } catch (error) {
+      console.error("Google Signup failed:", error);
+      alert("Sign-in failed. Please try again.");
+    }
+  };
+
   if (otpSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -222,10 +240,7 @@ const PhoneRegistration = () => {
                   <GoogleOAuthProvider clientId="147357071117-3s5bnhf8tmm0scal13l4v4iv8nmr4bhn.apps.googleusercontent.com">
                     <div className="w-full font-bold shadow-sm rounded-lg py-3 bg-white border border-gray-200 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow-md cursor-pointer">
                       <GoogleLogin
-                        onSuccess={(response) => {
-                          console.log("Google Login Success:", response);
-                          alert("Google Sign-In Successful!");
-                        }}
+                        onSuccess={handleGoogleSuccess}
                         onError={() => {
                           console.log("Google Login Failed");
                           alert("Google Sign-In Failed!");

@@ -19,7 +19,8 @@ import { FiMoreVertical } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 import { FaRegFileAlt } from "react-icons/fa";
-
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 const DashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,6 +56,8 @@ const DashBoard = () => {
   const [query, setQuery] = useState("");
 
   const [filteredUsers, setFilteredUsers] = useState([]);
+
+  const [value, setValue] = useState(new Date());
 
   const navigate = useNavigate();
 
@@ -152,17 +155,17 @@ const DashBoard = () => {
     },
     {
       name: "Messages",
-      icon: <IoChatbubbleEllipsesSharp size={20} className="text-pink-500"/>,
+      icon: <IoChatbubbleEllipsesSharp size={20} className="text-pink-500" />,
       key: "messages",
     },
     {
       name: "Mail Box",
-      icon: <IoMdMail size={20} className="text-white-500"/>,
+      icon: <IoMdMail size={20} className="text-white-500" />,
       key: "mail",
     },
     {
       name: "Members",
-      icon: <FaUserFriends size={20} className="text-purple-500"/>,
+      icon: <FaUserFriends size={20} className="text-purple-500" />,
       key: "members",
     },
     {
@@ -184,6 +187,51 @@ const DashBoard = () => {
       name: "Logout",
       icon: <IoIosLogOut size={20} className="text-red-500" />,
       key: "logout",
+    },
+  ];
+
+  const teamMembers = [
+    {
+      id: 1,
+      name: "Amit Kumar",
+      role: "Frontend Developer",
+      image: "",
+      email: "amit@example.com",
+    },
+    {
+      id: 2,
+      name: "Pooja Mehta",
+      role: "UI/UX Designer",
+      image: "",
+      email: "pooja@gmail.com",
+    },
+    {
+      id: 3,
+      name: "Rohan Singh",
+      role: "Backend Developer",
+      image: "",
+      email: "rohan@gmail.com",
+    },
+    {
+      id: 4,
+      name: "Vishal Gupta",
+      role: "Testing",
+      image: "",
+      email: "vishal@gmail.com"
+    },
+     {
+      id: 5,
+      name: "Rachna Rawat",
+      role: "HR",
+      image: "",
+      email: "rachna85@gmail.com"
+    },
+     {
+      id: 6,
+      name: "Vijay Pal",
+      role: "Support Engineer",
+      image: "",
+      email: "vijay12@gmail.com"
     },
   ];
 
@@ -653,7 +701,7 @@ const DashBoard = () => {
       </div>
     </div>
   );
-  
+
   const renderFindUser = () => (
     <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
       <div className="bg-white shadow-lg rounded-2xl w-full max-w-3xl p-8">
@@ -788,7 +836,263 @@ const DashBoard = () => {
     </div>
   );
 
-  // const renderMember = () => ();
+  const renderMember = () => (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-10 px-6">
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-10 tracking-tight">
+        Meet Our Team
+      </h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        {teamMembers.map((member) => (
+          <div
+            key={member.id}
+            className="group bg-white/90 backdrop-blur-sm rounded-3xl shadow-md hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 p-6 border border-gray-100"
+          >
+            <div className="relative flex justify-center mb-5">
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-28 h-28 rounded-full border-4 border-indigo-500 shadow-md transition-transform duration-300 group-hover:scale-105"
+              />
+              <span className="absolute bottom-1 right-[40%] bg-green-500 w-4 h-4 rounded-full border-2 border-white"></span>
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">
+                {member.name}
+              </h3>
+              <p className="text-sm text-gray-500 font-medium mt-1">
+                {member.role}
+              </p>
+              <p className="text-sm text-gray-400 mt-2">{member.email}</p>
+            </div>
+
+            <div className="w-16 h-[2px] bg-indigo-500 mx-auto my-4 rounded-full"></div>
+
+            <div className="flex justify-center">
+              <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-5 py-2 rounded-xl text-sm font-medium shadow-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-300">
+                View Profile
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderMessage = () => (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex items-center justify-between bg-white shadow px-6 py-4">
+        <h2 className="text-lg font-semibold text-gray-800">Team Chat</h2>
+        <button className="text-sm text-blue-600 hover:underline">
+          Clear Chat
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex items-start space-x-3">
+          <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center font-bold text-blue-700">
+            A
+          </div>
+          <div className="bg-white shadow p-3 rounded-xl max-w-md">
+            <p className="text-gray-700 text-sm">
+              Hey there! How are you doing today?
+            </p>
+            <span className="text-xs text-gray-400 block mt-1">10:42 AM</span>
+          </div>
+        </div>
+
+        <div className="flex items-start justify-end space-x-3">
+          <div className="bg-blue-600 text-white shadow p-3 rounded-xl max-w-md">
+            <p className="text-sm">
+              I’m good! Working on the new dashboard UI.
+            </p>
+            <span className="text-xs text-gray-200 block mt-1">10:45 AM</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border-t p-4 flex items-center space-x-3">
+        <input
+          type="text"
+          placeholder="Type your message..."
+          className="flex-1 border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition">
+          Send
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderMail = () => (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-white shadow px-6 py-4 flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">Mail Inbox</h2>
+        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-300">
+          Compose Mail
+        </button>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-64 bg-white border-r p-5 space-y-4">
+          <button className="w-full text-left px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200">
+            Inbox
+          </button>
+          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+            Sent
+          </button>
+          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+            Drafts
+          </button>
+          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+            Spam
+          </button>
+          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
+            Trash
+          </button>
+        </div>
+
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-md p-5 mb-5 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Subject: Project Update
+            </h3>
+            <p className="text-sm text-gray-500">
+              From: <span className="font-medium">manager@company.com</span>
+            </p>
+            <p className="mt-3 text-gray-600 leading-relaxed">
+              Hi team, please find the latest project update attached below.
+              Let’s review it in tomorrow’s meeting.
+            </p>
+            <div className="flex justify-end mt-4">
+              <button className="text-sm text-indigo-600 font-medium hover:underline">
+                View Details
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Subject: Meeting Reminder
+            </h3>
+            <p className="text-sm text-gray-500">
+              From: <span className="font-medium">hr@company.com</span>
+            </p>
+            <p className="mt-3 text-gray-600 leading-relaxed">
+              Reminder: Please join the team meeting scheduled for 10 AM
+              tomorrow. Agenda attached.
+            </p>
+            <div className="flex justify-end mt-4">
+              <button className="text-sm text-indigo-600 font-medium hover:underline">
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderReport = () => (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-white shadow px-6 py-4 flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">Company Reports</h2>
+        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-300">
+          Generate Report
+        </button>
+      </div>
+
+      <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Monthly Sales
+            </h3>
+            <span className="text-sm text-gray-500">October 2025</span>
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            This report provides an overview of total sales, revenue, and growth
+            rate for the current month.
+          </p>
+          <div className="mt-4 flex justify-end">
+            <button className="text-sm text-indigo-600 font-medium hover:underline">
+              View Report
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Employee Performance
+            </h3>
+            <span className="text-sm text-gray-500">Q4 2025</span>
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Analyze team productivity, task completion rates, and performance
+            indicators across departments.
+          </p>
+          <div className="mt-4 flex justify-end">
+            <button className="text-sm text-indigo-600 font-medium hover:underline">
+              View Report
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Project Summary
+            </h3>
+            <span className="text-sm text-gray-500">Weekly</span>
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Summary of ongoing projects, completed milestones, and pending
+            deliverables for the week.
+          </p>
+          <div className="mt-4 flex justify-end">
+            <button className="text-sm text-indigo-600 font-medium hover:underline">
+              View Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCalender = () => (
+    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100">
+      <div className="bg-white/90 backdrop-blur-md shadow-md px-8 py-4 flex justify-between items-center border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+          📅 Company Calendar
+        </h2>
+        <button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-md transition-all duration-300 transform hover:scale-105">
+          + Add Event
+        </button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-8 py-10">
+        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+          <Calendar
+            onChange={setValue}
+            value={value}
+            className="rounded-xl calendar-custom"
+          />
+        </div>
+      </div>
+
+      <div className="bg-white/80 border-t border-gray-200 px-8 py-4 text-sm text-gray-700 flex justify-between items-center">
+        <p>
+          <span className="font-semibold text-gray-900">Selected Date:</span>{" "}
+          {value.toDateString()}
+        </p>
+        <p className="text-gray-500 italic">
+          Stay organized and never miss an important event!
+        </p>
+      </div>
+    </div>
+  );
 
   const renderContent = () => {
     const mainUsers = users.filter((u) => u.source === "main");
@@ -805,31 +1109,114 @@ const DashBoard = () => {
         return renderProfile();
       case "findUser":
         return renderFindUser();
-      // case "member" :
-      //   return renderMember();
+      case "members":
+        return renderMember();
+      case "messages":
+        return renderMessage();
+      case "mail":
+        return renderMail();
+      case "report":
+        return renderReport();
+      case "calendar":
+        return renderCalender();
       default:
         return (
-          <div className="p-6 bg-gray-100 min-h-screen">
-            <h2 className="text-3xl font-bold mb-6 text-center italic underline text-gray-800">
-              Welcome to your Dashboard
+          <div className="p-8 bg-gradient-to-br from-gray-50 to-indigo-50 min-h-screen">
+            <h2 className="text-4xl font-extrabold mb-10 text-center text-gray-800 tracking-tight">
+              Welcome to Your <span className="text-indigo-600">Dashboard</span>
             </h2>
 
-            <div className="flex justify-center gap-6 mb-8 flex-wrap">
-              <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
-                <h3 className="text-gray-600 italic">Registered Users</h3>
-                <p className="text-2xl font-bold">{mainUsers.length}</p>
+            <div className="flex justify-center gap-8 flex-wrap">
+              <div className="group bg-white shadow-lg hover:shadow-2xl rounded-2xl p-6 w-56 text-center border border-gray-100 transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 mx-auto mb-3 flex items-center justify-center rounded-full bg-indigo-100 group-hover:bg-indigo-200 transition">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-7 w-7 text-indigo-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m8-8a4 4 0 110-8 4 4 0 010 8z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-gray-500 font-medium mb-1">
+                  Registered Users
+                </h3>
+                <p className="text-3xl font-bold text-gray-800">
+                  {mainUsers.length}
+                </p>
               </div>
-              <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
-                <h3 className="text-gray-600 italic">Phone Users</h3>
-                <p className="text-2xl font-bold">{phoneUsers.length}</p>
+
+              <div className="group bg-white shadow-lg hover:shadow-2xl rounded-2xl p-6 w-56 text-center border border-gray-100 transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 mx-auto mb-3 flex items-center justify-center rounded-full bg-blue-100 group-hover:bg-blue-200 transition">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-7 w-7 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 5h2l1 9h13l1-9h2M5 5l1 9m0 0h12m-12 0a2 2 0 100 4h12a2 2 0 100-4m-6 4v2m0 0H9m3 0h3"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-gray-500 font-medium mb-1">Phone Users</h3>
+                <p className="text-3xl font-bold text-gray-800">
+                  {phoneUsers.length}
+                </p>
               </div>
-              <div className="bg-white shadow-md rounded-lg p-4 w-48 text-center border border-gray-200">
-                <h3 className="text-gray-600 italic">Email Users</h3>
-                <p className="text-2xl font-bold">{emailUsers.length}</p>
+
+              <div className="group bg-white shadow-lg hover:shadow-2xl rounded-2xl p-6 w-56 text-center border border-gray-100 transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 mx-auto mb-3 flex items-center justify-center rounded-full bg-pink-100 group-hover:bg-pink-200 transition">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-7 w-7 text-pink-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 12H8m0 0l4-4m-4 4l4 4m-9 4h18"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-gray-500 font-medium mb-1">Email Users</h3>
+                <p className="text-3xl font-bold text-gray-800">
+                  {emailUsers.length}
+                </p>
               </div>
-              <div className="bg-green-100 shadow-md rounded-lg p-4 w-48 text-center border border-green-200">
-                <h3 className="text-green-700 italic">Total Users</h3>
-                <p className="text-2xl font-bold text-green-800">
+
+              <div className="group bg-gradient-to-br from-green-100 to-emerald-50 shadow-lg hover:shadow-2xl rounded-2xl p-6 w-56 text-center border border-green-200 transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 mx-auto mb-3 flex items-center justify-center rounded-full bg-green-200 group-hover:bg-green-300 transition">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-7 w-7 text-green-700"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17 20h5v-2a4 4 0 00-4-4h-1V9a5 5 0 00-5-5h-1a5 5 0 00-5 5v5H4a4 4 0 00-4 4v2h5"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-green-700 font-medium mb-1">Total Users</h3>
+                <p className="text-3xl font-bold text-green-800">
                   {totalUsers}
                 </p>
               </div>

@@ -2,8 +2,8 @@ import axios from "axios";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import EmailRegistration from "./EmailRegistration";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+
 
 const Login = () => {
   const [userName, setUsername] = useState("");
@@ -64,6 +64,28 @@ const Login = () => {
     }
   };
 
+const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    const res = await axios.post("http://localhost:5000/api/users/google-signup", {
+      credential: credentialResponse.credential,
+    });
+
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+
+    localStorage.setItem("role", res.data.user.role || "user")
+
+    // window.dispatchEvent(new Event("storage"));
+
+    alert("Google Signup/Login Successful!");
+    
+    navigate(`/profile/${res.data.user.id}`)
+  } catch (error) {
+    console.error("Google Signup failed:", error);
+    alert("Sign-in failed. Please try again.");
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
       <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
@@ -107,10 +129,7 @@ const Login = () => {
                   <GoogleOAuthProvider clientId="147357071117-3s5bnhf8tmm0scal13l4v4iv8nmr4bhn.apps.googleusercontent.com">
                     <div className="w-full font-bold shadow-sm rounded-lg py-3 bg-white border border-gray-200 flex items-center justify-center transition-all duration-300 ease-in-out hover:shadow-md cursor-pointer">
                       <GoogleLogin
-                        onSuccess={(response) => {
-                          console.log("Google Login Success:", response);
-                          alert("Google Sign-In Successful!");
-                        }}
+                        onSuccess={handleGoogleSuccess}
                         onError={() => {
                           console.log("Google Login Failed");
                           alert("Google Sign-In Failed!");
