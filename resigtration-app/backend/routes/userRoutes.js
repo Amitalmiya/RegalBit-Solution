@@ -25,7 +25,7 @@ router.post("/login", loginUser);
 
 
 router.get("/profile/:id", authenticateToken, getUserProfile);
-router.put("/update/:id", authenticateToken, updateUser);
+router.put("/:id", authenticateToken, updateUser);
 router.get("/:id", authenticateToken, getUserById);
 
 
@@ -42,7 +42,7 @@ router.get("/dashboard", authenticateToken, isAdminOrSuperAdmin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
-router.get("/search", authenticateToken, isAdminOrSuperAdmin, searchUsers);
+router.get("/search", authenticateToken, searchUsers);
 
 router.post("/google-signup", googleSignup);
 

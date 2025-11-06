@@ -19,9 +19,10 @@ import { FiMoreVertical } from "react-icons/fi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 import { FaRegFileAlt } from "react-icons/fa";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-
+import { Calendar as BigCalendar, momentLocalizer } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { format, parseISO } from "date-fns";
+import moment from "moment";
 const DashBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -62,6 +63,67 @@ const DashBoard = () => {
   const navigate = useNavigate();
 
   const { id } = useParams();
+
+  const localizer = momentLocalizer(moment);
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const [events, setEvents] = useState([
+    // {
+    //   title: "Team Meeting",
+    //   start: new Date(2025, 10, 10, 10, 0), // 10 Nov 2025, 10:00 AM
+    //   end: new Date(2025, 10, 10, 11, 0),
+    // },
+    // {
+    //   title: "Project Deadline",
+    //   start: new Date(2025, 10, 15, 17, 0),
+    //   end: new Date(2025, 10, 15, 18, 0),
+    // },
+  ]);
+
+  const [searched, setSearched] = useState();
+
+  const [activeFolder, setActiveFolder] = useState("Inbox");
+
+  const [showCompose, setShowCompose] = useState(false);
+
+  const [mails, setMails] = useState({
+    Inbox: [
+      {
+        id: 1,
+        subject: "Project Update",
+        from: "manager@company.com",
+        message:
+          "Hi team, please find the latest project update attached below. Let’s review it in tomorrow’s meeting.",
+      },
+      {
+        id: 2,
+        subject: "Meeting Reminder",
+        from: "hr@company.com",
+        message:
+          "Reminder: Please join the team meeting scheduled for 10 AM tomorrow. Agenda attached.",
+      },
+    ],
+    Sent: [
+      {
+        id: 3,
+        subject: "Re: Design Review",
+        from: "you@company.com",
+        message:
+          "Hi Manager, please find attached the updated design files for review. Let me know your feedback.",
+      },
+    ],
+    Drafts: [],
+    Spam: [],
+    Trash: [],
+  });
+
+  const [composeData, setComposeData] = useState({
+    to: "",
+    subject: "",
+    message: "",
+  });
+
 
   const token = localStorage.getItem("token");
 
@@ -195,43 +257,43 @@ const DashBoard = () => {
       id: 1,
       name: "Amit Kumar",
       role: "Frontend Developer",
-      image: "",
-      email: "amit@example.com",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-Opi7DeS74UKxWXRitnC0KQh5SwWmkOHdkg&s",
+      email: "amitalm777@example.com",
     },
     {
       id: 2,
       name: "Pooja Mehta",
       role: "UI/UX Designer",
-      image: "",
-      email: "pooja@gmail.com",
+      image: "https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA4L2pvYjExMjAtZWxlbWVudC0xOS5wbmc.png",
+      email: "mehtapooja854@gmail.com",
     },
     {
       id: 3,
       name: "Rohan Singh",
       role: "Backend Developer",
-      image: "",
-      email: "rohan@gmail.com",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK_l3k2SIVclOwai1URNdqcnXK3rdrfPYYUg&s",
+      email: "rohan987@gmail.com",
     },
     {
       id: 4,
       name: "Vishal Gupta",
-      role: "Testing",
-      image: "",
-      email: "vishal@gmail.com"
+      role: "Testing Engineer",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJWZUq1utFP0GqEoOpjMHnHEvWIqyZ17GWSA&s",
+      email: "vishal854@gmail.com",
     },
-     {
+    {
       id: 5,
       name: "Rachna Rawat",
-      role: "HR",
-      image: "",
-      email: "rachna85@gmail.com"
+      role: "Human Resources",
+      image: "https://images.squarespace-cdn.com/content/v1/58e167a8414fb5c0b2b8c13e/1503561540900-K0FXVM3QNP4843AJGQCD/Circle+Profile.jpg",
+      email: "rachna85@gmail.com",
     },
-     {
+    {
       id: 6,
       name: "Vijay Pal",
       role: "Support Engineer",
-      image: "",
-      email: "vijay12@gmail.com"
+      image: "https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA4L2pvYjExMjAtZWxlbWVudC0yMi5wbmc.png",
+      email: "vijay12@gmail.com",
     },
   ];
 
@@ -387,20 +449,69 @@ const DashBoard = () => {
   };
 
   const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim())
-      return alert("Please enter a name, username, or phone number.");
+  e.preventDefault();
 
-    try {
-      const res = await axios.get(`http://localhost:5000/api/users/search`, {
-        params: { query },
-      });
-      setFilteredUsers(res.data);
-    } catch (err) {
-      console.error("Search error:", err);
-      alert("No user found or server error.");
+  if (!query.trim()) {
+    alert("Please enter a name, username, or phone number.");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("You must be logged in to search users.");
+    return;
+  }
+
+  try {
+    const res = await axios.get("http://localhost:5000/api/users/search", {
+      params: { query },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("Search response:", res.data);
+    setFilteredUsers(res.data);
+  } catch (err) {
+    console.error("Search error:", err);
+
+    if (err.response?.status === 401) {
+      alert("Unauthorized. Please log in again.");
+    } else if (err.response?.status === 404) {
+      alert("No user found.");
+    } else {
+      alert("Server error. Please try again later.");
     }
+
+    setFilteredUsers([]);
+  }
+};
+
+ const handleComposeSubmit = (e) => {
+    e.preventDefault();
+    if (!composeData.to || !composeData.subject || !composeData.message) {
+      alert("All fields are required.");
+      return;
+    }
+
+    const newMail = {
+      id: Date.now(),
+      subject: composeData.subject,
+      from: "you@company.com",
+      message: composeData.message,
+    };
+
+    setMails((prev) => ({
+      ...prev,
+      Sent: [newMail, ...prev.Sent],
+    }));
+
+    setComposeData({ to: "", subject: "", message: "" });
+    setShowCompose(false);
+    setActiveFolder("Sent");
   };
+
 
   const renderAllUsers = () => (
     <div className="p-10 bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 min-h-screen">
@@ -706,7 +817,7 @@ const DashBoard = () => {
     <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
       <div className="bg-white shadow-lg rounded-2xl w-full max-w-3xl p-8">
         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-600">
-          Find User
+          🔍 Find User
         </h2>
 
         <form onSubmit={handleSearch} className="flex items-center gap-3 mb-6">
@@ -730,32 +841,26 @@ const DashBoard = () => {
             <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
               <thead className="bg-indigo-100">
                 <tr>
-                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
-                    Name
-                  </th>
-                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
-                    Username
-                  </th>
-                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
-                    Phone
-                  </th>
-                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">
-                    Email
-                  </th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">Name</th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">Username</th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">Phone</th>
+                  <th className="py-3 px-4 text-left text-gray-700 font-semibold">Email</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{user.name}</td>
-                    <td className="py-3 px-4">{user.userName}</td>
-                    <td className="py-3 px-4">{user.phone}</td>
-                    <td className="py-3 px-4">{user.email}</td>
+                    <td className="py-3 px-4">{user.name || "—"}</td>
+                    <td className="py-3 px-4">{user.userName || "—"}</td>
+                    <td className="py-3 px-4">{user.phone || "—"}</td>
+                    <td className="py-3 px-4">{user.email || "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        ) : searched ? (
+          <p className="text-gray-500 text-center mt-4">No user found.</p>
         ) : (
           <p className="text-gray-500 text-center mt-4">
             No results yet. Try searching above.
@@ -772,8 +877,19 @@ const DashBoard = () => {
           <div className="relative">
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-1 rounded-full">
               <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-inner">
-                <div className="w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold text-white bg-gradient-to-tr from-blue-600 to-purple-500 shadow-md">
-                  {getInitials(user.userName)}
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md">
+                  {user.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white bg-gradient-to-tr from-blue-600 to-purple-500">
+                      {getInitials(user.userName)}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -837,48 +953,50 @@ const DashBoard = () => {
   );
 
   const renderMember = () => (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 py-10 px-6">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-10 tracking-tight">
-        Meet Our Team
-      </h2>
+  <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-100 py-16 px-6">
+    <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-12 tracking-tight">
+      🌟 Meet Our Team
+    </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-        {teamMembers.map((member) => (
-          <div
-            key={member.id}
-            className="group bg-white/90 backdrop-blur-sm rounded-3xl shadow-md hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 p-6 border border-gray-100"
-          >
-            <div className="relative flex justify-center mb-5">
-              <img
-                src={member.image}
-                alt={member.name}
-                className="w-28 h-28 rounded-full border-4 border-indigo-500 shadow-md transition-transform duration-300 group-hover:scale-105"
-              />
-              <span className="absolute bottom-1 right-[40%] bg-green-500 w-4 h-4 rounded-full border-2 border-white"></span>
-            </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+      {teamMembers.map((member) => (
+        <div
+          key={member.id}
+          className="group bg-white/80 backdrop-blur-md rounded-3xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 p-8 border border-gray-100 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-transparent to-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
 
-            <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">
-                {member.name}
-              </h3>
-              <p className="text-sm text-gray-500 font-medium mt-1">
-                {member.role}
-              </p>
-              <p className="text-sm text-gray-400 mt-2">{member.email}</p>
-            </div>
-
-            <div className="w-16 h-[2px] bg-indigo-500 mx-auto my-4 rounded-full"></div>
-
-            <div className="flex justify-center">
-              <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-5 py-2 rounded-xl text-sm font-medium shadow-md hover:from-indigo-600 hover:to-blue-600 transition-all duration-300">
-                View Profile
-              </button>
-            </div>
+          <div className="relative flex justify-center mb-6">
+            <img
+              src={member.image}
+              alt={member.name}
+              className="w-28 h-28 rounded-full border-4 border-indigo-500 shadow-md transition-transform duration-500 group-hover:scale-110"
+            />
+            <span className="absolute bottom-2 right-[40%] bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm"></span>
           </div>
-        ))}
-      </div>
+
+          <div className="text-center relative z-10">
+            <h3 className="text-xl font-bold text-gray-800 group-hover:text-indigo-600 transition-colors duration-300">
+              {member.name}
+            </h3>
+            <p className="text-sm text-gray-600 font-medium mt-1 tracking-wide">
+              {member.role}
+            </p>
+            <p className="text-sm text-gray-400 mt-2 italic">{member.email}</p>
+          </div>
+
+          <div className="w-16 h-[2px] bg-indigo-500 mx-auto my-5 rounded-full group-hover:w-24 transition-all duration-300"></div>
+
+          <div className="flex justify-center">
+            <button className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-md hover:from-indigo-600 hover:to-blue-600 hover:shadow-lg transition-all duration-300">
+              View Profile
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 
   const renderMessage = () => (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -926,72 +1044,147 @@ const DashBoard = () => {
   );
 
   const renderMail = () => (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-800">Mail Inbox</h2>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition-all duration-300">
-          Compose Mail
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50 flex flex-col">
+      <div className="bg-white shadow px-8 py-4 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+          📬 Mail Inbox
+        </h2>
+        <button
+          onClick={() => setShowCompose(true)}
+          className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-md transition-all duration-300 transform hover:scale-105"
+        >
+          ✉️ Compose Mail
         </button>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-64 bg-white border-r p-5 space-y-4">
-          <button className="w-full text-left px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200">
-            Inbox
-          </button>
-          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
-            Sent
-          </button>
-          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
-            Drafts
-          </button>
-          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
-            Spam
-          </button>
-          <button className="w-full text-left px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100">
-            Trash
-          </button>
+        <div className="w-64 bg-white border-r border-gray-200 p-6 space-y-3 shadow-sm">
+          {["Inbox", "Sent", "Drafts", "Spam", "Trash"].map((folder) => (
+            <button
+              key={folder}
+              onClick={() => setActiveFolder(folder)}
+              className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-all duration-300 ${
+                activeFolder === folder
+                  ? "bg-indigo-100 text-indigo-700 shadow-sm"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {folder}
+            </button>
+          ))}
         </div>
 
-        <div className="flex-1 p-6 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-md p-5 mb-5 hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Subject: Project Update
-            </h3>
-            <p className="text-sm text-gray-500">
-              From: <span className="font-medium">manager@company.com</span>
+        <div className="flex-1 p-8 overflow-y-auto space-y-6">
+          {mails[activeFolder].length > 0 ? (
+            mails[activeFolder].map((mail) => (
+              <div
+                key={mail.id}
+                className="group bg-white rounded-2xl shadow-md p-6 border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              >
+                <h3 className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">
+                  Subject: {mail.subject}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  From: <span className="font-medium">{mail.from}</span>
+                </p>
+                <p className="mt-4 text-gray-600 leading-relaxed">
+                  {mail.message}
+                </p>
+                <div className="flex justify-end mt-4">
+                  <button className="text-sm text-indigo-600 font-medium hover:underline">
+                    View Details →
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500 italic mt-20">
+              No emails in this folder 📭
             </p>
-            <p className="mt-3 text-gray-600 leading-relaxed">
-              Hi team, please find the latest project update attached below.
-              Let’s review it in tomorrow’s meeting.
-            </p>
-            <div className="flex justify-end mt-4">
-              <button className="text-sm text-indigo-600 font-medium hover:underline">
-                View Details
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Subject: Meeting Reminder
-            </h3>
-            <p className="text-sm text-gray-500">
-              From: <span className="font-medium">hr@company.com</span>
-            </p>
-            <p className="mt-3 text-gray-600 leading-relaxed">
-              Reminder: Please join the team meeting scheduled for 10 AM
-              tomorrow. Agenda attached.
-            </p>
-            <div className="flex justify-end mt-4">
-              <button className="text-sm text-indigo-600 font-medium hover:underline">
-                View Details
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
-    </div>
+
+      {showCompose && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative animate-fadeIn">
+            <button
+              onClick={() => setShowCompose(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              ✖
+            </button>
+
+            <h3 className="text-xl font-semibold text-gray-800 mb-5">
+              ✉️ New Message
+            </h3>
+
+            <form onSubmit={handleComposeSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  To
+                </label>
+                <input
+                  type="email"
+                  value={composeData.to}
+                  onChange={(e) =>
+                    setComposeData({ ...composeData, to: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
+                  placeholder="recipient@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  value={composeData.subject}
+                  onChange={(e) =>
+                    setComposeData({ ...composeData, subject: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none"
+                  placeholder="Enter subject"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Message
+                </label>
+                <textarea
+                  rows={4}
+                  value={composeData.message}
+                  onChange={(e) =>
+                    setComposeData({ ...composeData, message: e.target.value })
+                  }
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none resize-none"
+                  placeholder="Write your message..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCompose(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700 transition shadow-md"
+                >
+                  Send
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>  
   );
 
   const renderReport = () => (
@@ -1062,22 +1255,30 @@ const DashBoard = () => {
   );
 
   const renderCalender = () => (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100">
+     <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100">
       <div className="bg-white/90 backdrop-blur-md shadow-md px-8 py-4 flex justify-between items-center border-b border-gray-200">
         <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
           📅 Company Calendar
         </h2>
-        <button className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-md transition-all duration-300 transform hover:scale-105">
+        <button
+          className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-md transition-all duration-300 transform hover:scale-105"
+          onClick={() => alert("Add Event functionality coming soon!")}
+        >
           + Add Event
         </button>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-8 py-10">
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-          <Calendar
-            onChange={setValue}
-            value={value}
-            className="rounded-xl calendar-custom"
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100 w-full max-w-6xl">
+          <BigCalendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 500 }}
+            selectable
+            onSelectEvent={(event) => alert(`Event: ${event.title}`)}
+            onSelectSlot={(slotInfo) => setSelectedDate(slotInfo.start)}
           />
         </div>
       </div>
@@ -1085,13 +1286,14 @@ const DashBoard = () => {
       <div className="bg-white/80 border-t border-gray-200 px-8 py-4 text-sm text-gray-700 flex justify-between items-center">
         <p>
           <span className="font-semibold text-gray-900">Selected Date:</span>{" "}
-          {value.toDateString()}
+          {format(selectedDate, "EEE, dd MMM yyyy")}
         </p>
         <p className="text-gray-500 italic">
           Stay organized and never miss an important event!
         </p>
       </div>
     </div>
+
   );
 
   const renderContent = () => {

@@ -258,37 +258,64 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const fields = req.body;
-    if (!Object.keys(fields).length)
-      return res.status(400).json({ message: "No fields to update" });
+    const {
+      phone,
+      zipCode,
+      email,
+      password,
+      dateOfBirth,
+      userName,
+      gender,
+      bloodGroup,
+    } = req.body
 
-    const setClause = Object.keys(fields)
-      .map((field) => `${field} = ?`)
-      .join(", ");
-    const values = [...Object.values(fields), id];
+    if (!id) return res.status(400).json({ message: "User Id is required" });
 
-    const [resultMain] = await pool.query(
-      `UPDATE users SET ${setClause} WHERE id = ?`,
-      values
-    );
-    const [resultPhone] = await poolPhone.query(
-      `UPDATE users SET ${setClause} WHERE id = ?`,
-      values
-    );
-    const [resultEmail] = await poolEmail.query(
-      `UPDATE users SET ${setClause} WHERE id = ?`,
-      values
-    );
+    const updatedData  = [
+      phone,
+      zipCode,
+      email,
+      password,
+      dateOfBirth,
+      userName,
+      gender,
+      bloodGroup,
+      id,
+    ];
 
-    if (
-      resultMain.affectedRows === 0 &&
-      resultPhone.affectedRows === 0 &&
-      resultEmail.affectedRows === 0
-    ) {
+    const [ mainUser ] = await pool.query("SELECT * FROM users WHERE id = ?", [id]);
+    const [ phoneUser ] = await poolPhone.query("SELECT * FROM users WHERE id = ?", [id]); 
+    const [ emailUser ] = await poolEmail.query("SELECT * FROM users WHERE id = ?", [id]); 
+
+    let result;
+
+    if (mainUser.length > 0) {
+      [result] = await pool.query(`UPDATE users SET phone = ?,  zipCode=?, email=?, password=?, dateOfBirth=?, userName=?, gender=?, bloodGroup=? 
+         WHERE id=?`, updatedData);
+    } else if (phoneUser.length > 0) {
+      [result] = await poolPhone.query(
+        `UPDATE users 
+         SET phone=?, zipCode=?, email=?, password=?, dateOfBirth=?, userName=?, gender=?, bloodGroup=? 
+         WHERE id=?`,
+        updatedData
+      );
+    } else if (emailUser.length > 0) {
+      [result] = await poolEmail.query(
+        `UPDATE users 
+         SET phone=?, zipCode=?, email=?, password=?, dateOfBirth=?, userName=?, gender=?, bloodGroup=? 
+         WHERE id=?`,
+        updatedData
+      );
+    } else {
       return res.status(404).json({ message: "User not found" });
     }
 
+        if (result.affectedRows === 0) {
+      return res.status(400).json({ message: "No changes made to the user" });
+    }
+
     res.status(200).json({ message: "User updated successfully" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error", error: err.message });
@@ -500,35 +527,45 @@ const resetPassword = async (req, res) => {
 const searchUsers = async (req, res) => {
   const { query } = req.query;
 
-  if (!query) return res.status(400).json({ error: "Query is required" });
+  if (!query) {
+    return res.status(400).json({ error: "Query is required" });
+  }
 
   try {
     const [resultMain] = await pool.query(
-      `SELECT id, userName, phone, email FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,
+      `SELECT id, name, userName, phone, email 
+       FROM users 
+       WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,
       [`%${query}%`, `%${query}%`, `%${query}%`]
     );
 
     const [resultPhone] = await poolPhone.query(
-      `SELECT id, userName, phone FROM users WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,
-      [`%${query}%`, `%${query}%`]
+      `SELECT id, name, userName, phone 
+       FROM users 
+       WHERE name LIKE ? OR userName LIKE ? OR phone LIKE ?`,
+      [`%${query}%`, `%${query}%`, `%${query}%`]
     );
 
     const [resultEmail] = await poolEmail.query(
-      `SELECT id, userName, email FROM users WHERE name LIKE ? OR userName LIKE ? OR email LIKE ?`,
-      [`%${query}%`, `%${query}%`]
+      `SELECT id, name, userName, email 
+       FROM users 
+       WHERE name LIKE ? OR userName LIKE ? OR email LIKE ?`,
+      [`%${query}%`, `%${query}%`, `%${query}%`]
     );
 
-    const user = resultMain[0] || resultPhone[0] || resultEmail[0];
+    const users = [...resultMain, ...resultPhone, ...resultEmail];
 
-    if (user.length === 0) {
-      return res.status(404).json({ error: "No User found" });
+    if (users.length === 0) {
+      return res.status(404).json({ error: "No user found" });
     }
-    res.json(user);
+
+    res.json(users);
   } catch (error) {
-    console.log(error);
+    console.error("Search error:", error);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 const googleSignup = async (req, res) => {
   try {

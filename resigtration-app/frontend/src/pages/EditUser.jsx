@@ -57,8 +57,8 @@ const fields = [
   {
     name: "dateOfBirth",
     label: "Date of Birth :",
-    type: "text",
-    placeholder: "MM-DD-YYYY or MM/DD/YYYY",
+    type: "date",
+    // placeholder: "MM-DD-YYYY or MM/DD/YYYY",
     maxLength: 10,
   },
   {
@@ -122,7 +122,7 @@ const EditUser = () => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
-  const role = localStorage.getItem("role")
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -136,6 +136,7 @@ const EditUser = () => {
 
   const handleFormEdit = async (e) => {
     e.preventDefault();
+
     try {
       const existingUsers = await axios.get("http://localhost:5000/api/users");
 
@@ -156,15 +157,22 @@ const EditUser = () => {
       }
 
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5000/api/users/update/${id}`, edit, {
+      const role = localStorage.getItem("role");
+
+      await axios.put(`http://localhost:5000/api/users/${id}`, edit, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       alert("User updated successfully!");
-      navigate("/users");
+
+      if (role === "superadmin" || role === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate(`/profile/${id}`);
+      }
     } catch (error) {
-      console.error(error);
-      alert("Update failed!");
+      console.error("Update Error:", error);
+      alert("Update failed! Please try again.");
     }
   };
 
@@ -185,8 +193,10 @@ const EditUser = () => {
               minLength,
               option = [],
             }) => (
-              <div className="mb-4" key={name}>
-                <label className="italic">{label}</label>
+              <div className="space-y-1" key={name}>
+                <label className="block text-gray-700 font-semibold">
+                  {label}
+                </label>
 
                 {type === "select" ? (
                   <select
@@ -195,7 +205,8 @@ const EditUser = () => {
                     onChange={(e) =>
                       setEdit({ ...edit, [name]: e.target.value })
                     }
-                    className="border w-full focus:ring-1 focus:ring-black italic text-center"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none transition text-gray-700"
+                    // className="border w-full focus:ring-1 focus:ring-black italic text-center"
                     required
                   >
                     <option value="">Select {label.replace(":", "")}</option>
@@ -215,7 +226,8 @@ const EditUser = () => {
                       onChange={(e) =>
                         setEdit({ ...edit, [name]: e.target.value })
                       }
-                      className="border w-full focus:ring-1 focus:ring-black italic text-center pr-10"
+                      // className="border w-full focus:ring-1 focus:ring-black italic text-center pr-10"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none transition text-gray-700"
                       maxLength={maxLength}
                       minLength={minLength}
                       required
@@ -237,7 +249,8 @@ const EditUser = () => {
                     onChange={(e) =>
                       setEdit({ ...edit, [name]: e.target.value })
                     }
-                    className="border w-full focus:ring-1 focus:ring-black italic text-center"
+                    // className="border w-full focus:ring-1 focus:ring-black italic text-center"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-400 outline-none transition text-gray-700"
                     maxLength={maxLength}
                     minLength={minLength}
                     required
