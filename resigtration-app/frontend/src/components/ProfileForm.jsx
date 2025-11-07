@@ -5,22 +5,17 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 const ProfileForm = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const userId = location.state?.userId;
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-//   const { userId } = useParams();
-
-    // const {token} = useParams();
-
-  const location = useLocation();
-
-  const userId = location.state?.userId
-
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
+    phone: "",
     dateOfBirth: "",
     gender: "",
     bloodGroup: "",
@@ -28,38 +23,66 @@ const ProfileForm = () => {
     zipCode: "",
   });
 
-  
-useEffect(() => {
-  if (!userId || !token) return;
+  const regex = {
+    userName: /^[A-Za-z_][A-Za-z0-9_]{2,19}$/,
+    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/i,
+    phone: /^(\+91)?[6-9]\d{9}$/, 
+    password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    zipCode: /^\d{5}(-\d{4})?$/,
+    
+  };
 
-  (async () => {
-    try {
-      const { data } = await axios.get(`http://localhost:5000/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFormData(prev => ({ ...prev, ...data }));
-    } catch (error) {
-      console.error("Failed to fetch user details:", error);
-      setMessage({ type: "error", text: "Failed to fetch profile data." });
-    } finally {
-      setLoading(false);
-    }
-  })();
-}, [token, userId]);
+  useEffect(() => {
+    if (!userId || !token) return;
 
-  
-  const handleChange = e =>
+    (async () => {
+      try {
+        const { data } = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFormData((prev) => ({ ...prev, ...data }));
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+        setMessage({ type: "error", text: "Failed to fetch profile data." });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token, userId]);
+
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  const validateForm = () => {
+    if (!regex.userName.test(formData.userName))
+      return "Username must be 4–16 characters and cannot start with a number.";
+    if (!regex.email.test(formData.email))
+      return "Please enter a valid email address.";
+    if (!regex.phone.test(formData.phone))
+      return "Please enter a valid Indian phone number.";
+    if (!regex.password.test(formData.password))
+      return "Password must be at least 6 characters long and contain both letters and numbers.";
+    if (!regex.zipCode.test(formData.zipCode))
+      return "Please enter a valid 6-digit zip code.";
+    return null;
+  };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationError = validateForm();
+    if (validationError) {
+      setMessage({ type: "error", text: validationError });
+      return;
+    }
+
     try {
       await axios.post(`http://localhost:5000/api/users`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage({ type: "success", text: "Profile saved successfully!" });
-      setTimeout(() => navigate(`/profile/${token}`), 1500);
+
+      setTimeout(() => navigate(`/profile/${userId}`), 1000);
     } catch (err) {
       setMessage({
         type: "error",
@@ -68,17 +91,18 @@ useEffect(() => {
     }
   };
 
-//   if (loading)
-//     return (
-//       <div className="flex items-center justify-center h-screen text-xl">
-//         Loading profile...
-//       </div>
-//     );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen text-xl">
+        Loading profile...
+      </div>
+    );
+
   const step1Fields = [
     { name: "userName", label: "Username", type: "text", placeholder: "Enter username" },
     { name: "email", label: "Email", type: "email", placeholder: "Enter email" },
     { name: "dateOfBirth", label: "Date of Birth", type: "date" },
-    { name: "phone", label: "Phone", type: "tel", placeholder: "Enter Phone" },
+    { name: "phone", label: "Phone", type: "tel", placeholder: "Enter phone", maxLength: 10},
     { name: "password", label: "Password", type: "password", placeholder: "Enter password" },
   ];
 
@@ -104,7 +128,7 @@ useEffect(() => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {step === 1 && (
             <>
-              {step1Fields.map(({ name, label, type, placeholder }) => (
+              {step1Fields.map(({ name, label, type, placeholder, maxLength }) => (
                 <div key={name}>
                   <label className="block text-gray-700 font-medium mb-1">{label}</label>
                   <input
@@ -115,6 +139,7 @@ useEffect(() => {
                     placeholder={placeholder}
                     className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
                     required
+                    maxLength={maxLength}
                   />
                 </div>
               ))}
@@ -156,7 +181,7 @@ useEffect(() => {
                   required
                 >
                   <option value="">Select Gender</option>
-                  {["Male", "Female", "Other"].map(opt => (
+                  {["Male", "Female", "Other"].map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
                     </option>
@@ -174,7 +199,7 @@ useEffect(() => {
                   required
                 >
                   <option value="">Select Blood Group</option>
-                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(group => (
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => (
                     <option key={group} value={group}>
                       {group}
                     </option>

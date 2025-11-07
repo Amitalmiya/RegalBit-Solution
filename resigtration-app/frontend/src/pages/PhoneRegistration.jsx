@@ -20,7 +20,7 @@ const PhoneRegistration = () => {
   const navigate = useNavigate();
   const inputs = useRef([]);
 
-  const phoneRegex = /^\+?\d{1,4}?[\s.-]?\(?\d{1,5}?\)?[\s.-]?\d{1,9}([\s.-]?\d{1,9})?$/;
+  const phoneRegex = /^\+?[1-9]\d{1,3}[\s-]?\d{6,14}$/;
 
   useEffect(() => {
     let timer;
